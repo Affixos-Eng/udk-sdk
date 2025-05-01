@@ -20,7 +20,7 @@ Zephyr, also `main`.
 
 To assist users in easily setting up and running the examples, LEAPS has 
 provided a detailed guideline in the following document: 
-[UDK-SDK Getting Started Guide](https://docs.leapslabs.com/udk/development-guide/start-with-sdk/). 
+[UDK-SDK Getting Started Guide](https://docs.leapslabs.com/udk/development-guide/udk-sdk-getting-started/). 
 Please refer to this guide for each respective platform.
 
 
