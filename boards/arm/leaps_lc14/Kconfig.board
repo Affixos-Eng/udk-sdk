@@ -1,0 +1,11 @@
+# LEAPS - Low Energy Accurate Positioning System.
+#
+# LEAPS LC14 board configuration
+#
+# (c) 2024, LEAPS - All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_LEAPS_LC14
+	bool "LEAPS LC14"
+	depends on SOC_NRF52840_QIAA

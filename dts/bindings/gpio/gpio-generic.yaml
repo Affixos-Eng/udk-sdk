@@ -1,0 +1,23 @@
+# LEAPS - Low Energy Accurate Positioning System.
+# 
+# Copyright (c) 2025, LEAPS. All rights reserved.
+# 
+# SPDX-License-Identifier: Apache-2.0
+#
+---
+description: GPIO GENERIC parent node
+compatible: "gpio-generic"
+
+child-binding:
+
+    description: GPIO GENERIC child node
+    properties:
+       gpios:
+          type: phandle-array
+          required: true
+       label:
+          required: true
+          type: string
+          description: This is a representation of generic GPIO nodes
+
+

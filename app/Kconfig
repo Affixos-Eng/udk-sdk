@@ -1,0 +1,201 @@
+# LEAPS - Low Energy Accurate Positioning System.
+#
+# Kconfig - Menu Config to select example
+#
+# Copyright (c) 2025, LEAPS. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+menu "Sample application"
+
+choice TEST
+	prompt "Enter to select other option, current option is:"
+	default READING_DEV_ID
+
+
+config TEST_BUTTONS
+	bool "Run example: (001_ex_press_buttons/press_button.c) pressing the button and print console msg of each button respectively. Refer the header of each example source for more detail."
+
+config TEST_BUZZER
+	bool "Run example: (002_ex_buzzer_alarm/buzzer_alarm.c) activating buzzer - the buzze will emmit the beep sound. Refer the header of each example source for more detail."
+
+config TEST_LED
+	bool "Run example: (003_ex_led_toggle/led_toggle.c) activating all LED - the blue/red/green LED will be tonggled. Refer the header of each example source for more detail."
+
+config TEST_MOTOR
+	bool "Run example: (004_ex_motor_vibration/motor_vibration.c) activating the motor with a vibration. Refer the header of each example source for more detail."
+
+config TEST_HW_INTERFACE_COMBINATION
+	bool "Run example: (005_ex_hwinterfaces_combination/hw_interfaces_combination.c) Activating the Buzzer, Motor and LEDs by press botton A, B and C respectively. Refer the header of each example source for more detail."
+
+config READING_DEV_ID
+    bool "Run exmaple: (ex_00a_reading_dev_id/read_dev_id.c) Read the device id value from UWB chip - the ID will be printed in console. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_TX
+    bool "Run exmaple: (ex_01a_simple_tx/simple_tx.c) Simple TX example code. Refer the header of each example source for more detail."
+
+config TEST_TX_SLEEP_IDLE_RC
+    bool "Run exmaple: (ex_01b_tx_sleep/tx_sleep_idleRC.c) TX with sleep example code. Refer the header of each example source for more detail."
+
+config TEST_TX_SLEEP
+    bool "Run exmaple: (ex_01b_tx_sleep/tx_sleep.c) TX with sleep example code. Refer the header of each example source for more detail."
+
+config TEST_TX_SLEEP_AUTO
+    bool "Run exmaple: (ex_01c_tx_sleep_auto/tx_sleep_auto.c) TX with auto sleep example code. Refer the header of each example source for more detail."
+
+config TEST_TX_SLEEP_TIMED
+    bool "Run exmaple: (ex_01d_tx_timed_sleep/tx_timed_sleep.c) TX with timed sleep example code. Refer the header of each example source for more detail."
+
+config TEST_TX_WITH_CCA
+    bool "Run exmaple: (ex_01e_tx_with_cca/tx_with_cca.c) Here we implement a simple Clear Channel Assessment (CCA) mechanism before frame transmission. The CCA can be used to avoid collisions with other frames on the air. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_TX_STS_SDC
+    bool "Run exmaple: (ex_01g_simple_tx_sts_sdc/simple_tx_sts_sdc.c) Here we implement a simple Clear Channel Assessment (CCA) mechanism before frame transmission. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_TX_PDOA
+    bool "Run exmaple: (ex_01h_simple_tx_pdoa/simple_tx_pdoa.c) Simple TX PDOA example code, companion to Simple RX PDOA example. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_TX_AES
+    bool "Run exmaple: (ex_01i_simple_tx_aes/simple_tx_aes.c) Simple TX + Automotive example code. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_TX_AUTOMOTIVE
+    bool "Run exmaple: (ex_01j_simple_tx_automotive/simple_tx_automotive.c) Simple TX + AES example code. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_RX
+    bool "Run exmaple: (ex_02a_simple_rx/simple_rx.c) Simple RX example code. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_RX_NLOS
+    bool "Run exmaple: (ex_02a_simple_rx/simple_rx_nlos.c) Simple RX NLOS example code. Refer the header of each example source for more detail."
+
+config TEST_RX_DIAG
+    bool "Run exmaple: (ex_02c_rx_diagnostics/rx_diagnostics.c) Simple RX with diagnostics example code. Refer the header of each example source for more detail."
+
+config TEST_RX_SNIFF
+    bool "Run exmaple: (ex_02d_rx_sniff/rx_sniff.c) RX using SNIFF mode example code. Refer the header of each example source for more detail."
+
+config TEST_DOUBLE_BUFFER_RX
+    bool "Run exmaple: (ex_02e_rx_dbl_buff/double_buffer_rx.c) RX using double buffering example code. Refer the header of each example source for more detail."
+
+config TEST_RX_TRIM
+    bool "Run exmaple: (ex_02f_rx_with_crystal_trim/rx_with_xtal_trim.c) RX with Crystal Trim example code. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_RX_STS_SDC
+    bool "Run exmaple: (ex_02g_simple_rx_sts_sdc/simple_rx_sts_sdc.c) Simple RX example code that utilises STS with deterministic code. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_RX_PDOA
+    bool "Run exmaple: (ex_02h_simple_rx_pdoa/simple_rx_pdoa.c) This examples prints the PDOA value to the virtual COM. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_RX_AES
+    bool "Run exmaple: (ex_02i_simple_rx_aes/simple_rx_aes.c) Simple RX + AES example code. Refer the header of each example source for more detail."
+
+config TEST_RX_ADC_CAPTURE
+    bool "Run exmaple: (ex_02j_rx_adc_capture/rx_adc_capture.c) This test captures the ADC samples on receiving a signal (and reads the captured ADC buffer into a file - Only on Nordic EVB). Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_RX_CIR
+    bool "Run exmaple: (ex_02k_simple_rx_cir/simple_rx_cir.c) Simple RX CIR example code. Refer the header of each example source for more detail."
+
+config TEST_TX_WAIT_RESP
+    bool "Run exmaple: (ex_03a_tx_wait_resp/tx_wait_resp.c) TX then wait for response example code. Refer the header of each example source for more detail."
+
+config TEST_RX_SEND_RESP
+    bool "Run exmaple: (ex_03b_rx_send_resp/rx_send_resp.c) RX then send a response example code. Refer the header of each example source for more detail."
+
+config TEST_TX_WAIT_RESP_INT
+    bool "Run exmaple: (ex_03d_tx_wait_resp_interrupts/tx_wait_resp_int.c) TX then wait for response using interrupts example code. Refer the header of each example source for more detail."
+
+config TEST_CONTINUOUS_WAVE
+    bool "Run exmaple: (ex_04a_cont_wave/continuous_wave.c) Continuous wave mode example code. This example code activates continuous wave mode on channel 5 for 2 minutes before stopping operation. Refer the header of each example source for more detail."
+
+config TEST_CONTINUOUS_FRAME
+    bool "Run exmaple: (ex_04b_cont_frame/continuous_frame.c) Continuous frame mode example code.  This example application enables continuous frame mode to transmit frames without interruption for 2 minutes before stopping all operation. Refer the header of each example source for more detail."
+
+config TEST_DS_TWR_INITIATOR_STS
+    bool "Run exmaple: (ex_05a_ds_twr_init/ds_twr_initiator_sts.c) Double-sided two-way ranging (DS TWR) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_DS_TWR_INITIATOR
+    bool "Run exmaple: (ex_05a_ds_twr_init/ds_twr_initiator.c) Double-sided two-way ranging (DS TWR) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_DS_TWR_RESPONDER_STS
+    bool "Run exmaple: (ex_05b_ds_twr_resp/ds_twr_responder_sts.c) Double-sided two-way ranging (DS TWR) responder example code. Refer the header of each example source for more detail."
+
+config TEST_DS_TWR_RESPONDER
+    bool "Run exmaple: (ex_05b_ds_twr_resp/ds_twr_responder.c) Double-sided two-way ranging (DS TWR) responder example code. Refer the header of each example source for more detail."
+
+config TEST_DS_TWR_STS_SDC_INITIATOR
+    bool "Run exmaple: (ex_05c_ds_twr_init_sts_sdc/ds_twr_sts_sdc_initiator.c) Double-sided two-way ranging (DS TWR) STS with SDC (STS-SDC) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_DS_TWR_STS_SDC_RESPONDER
+    bool "Run exmaple: (ex_05d_ds_twr_resp_sts_sdc/ds_twr_sts_sdc_responder.c) Double-sided two-way ranging (DS TWR) with STS with SDC (STS-SDC) responder example code. Refer the header of each example source for more detail."
+
+config TEST_SS_TWR_INITIATOR_STS_NO_DATA
+    bool "Run exmaple: (ex_06a_ss_twr_initiator/ss_twr_initiator_sts_no_data.c) Single-sided two-way ranging (SS TWR) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_SS_TWR_INITIATOR_STS
+    bool "Run exmaple: (ex_06a_ss_twr_initiator/ss_twr_initiator_sts.c) Single-sided two-way ranging (SS TWR) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_SS_TWR_INITIATOR
+    bool "Run exmaple: (ex_06a_ss_twr_initiator/ss_twr_initiator.c) Single-sided two-way ranging (SS TWR) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_SS_TWR_RESPONDER_STS_NO_DATA
+    bool "Run exmaple: (ex_06b_ss_twr_responder/ss_twr_responder_sts_no_data.c) Single-sided two-way ranging (SS TWR) responder example code. Refer the header of each example source for more detail."
+ 
+config TEST_SS_TWR_RESPONDER_STS
+    bool "Run exmaple: (ex_06b_ss_twr_responder/ss_twr_responder_sts.c) Single-sided two-way ranging (SS TWR) responder example code. Refer the header of each example source for more detail."
+
+config TEST_SS_TWR_RESPONDER
+    bool "Run exmaple: (ex_06b_ss_twr_responder/ss_twr_responder.c) Single-sided two-way ranging (SS TWR) responder example code. Refer the header of each example source for more detail."
+
+config TEST_AES_SS_TWR_INITIATOR
+    bool "Run exmaple: (ex_06e_AES_ss_twr_initiator/ss_aes_twr_initiator.c) Single-sided two-way ranging (SS AES TWR) initiator example code. Refer the header of each example source for more detail."
+
+config TEST_AES_SS_TWR_RESPONDER
+    bool "Run exmaple: (ex_06f_AES_ss_twr_responder/ss_aes_twr_responder.c) Single-sided two-way ranging (SS AES TWR) responder example code. Refer the header of each example source for more detail."
+ 
+config TEST_ACK_DATA_TX
+    bool "Run exmaple: (ex_07a_ack_data_tx/ack_data_tx.c) Automatically acknowledged data TX example code. Refer the header of each example source for more detail."
+
+config TEST_ACK_DATA_RX
+    bool "Run exmaple: (ex_07b_ack_data_rx/ack_data_rx.c) Automatically Acknowledged data RX example code. Refer the header of each example source for more detail."
+
+config TEST_SPI_CRC
+    bool "Run exmaple: (ex_11a_spi_crc/spi_crc.c) demonstrates how SPI CRC mode should be used in DW3000. Refer the header of each example source for more detail."
+
+config TEST_GPIO
+    bool "Run exmaple: (ex_13a_gpio/gpio_example.c) This example demonstrates how to enable DW IC GPIOs as inputs and outputs. Refer the header of each example source for more detail."
+
+config TEST_OTP_WRITE
+    bool "Run exmaple: (ex_14_otp_write/otp_write.c) writes to the OTP memory and check if the write was successful. Refer the header of each example source for more detail."
+
+config TEST_LE_PEND_RX
+    bool "Run exmaple: (ex_15_le_pend/le_pend_rx.c) Sets data pending bit in ack message if correct criteria is met. Refer the header of each example source for more detail."
+
+config TEST_LE_PEND_TX
+    bool "Run exmaple: (ex_15_le_pend/le_pend_tx.c) Simple example that transmits mac message and wait for ack response from rx. Refer the header of each example source for more detail."
+
+config TEST_PLL_CAL
+    bool "Run exmaple: (ex_16_pll_cal/pll_cal.c) PLL Calibration for temperature change example code. Refer the header of each example source for more detail."
+
+config TEST_BW_CAL
+    bool "Run exmaple: (ex_17_bw_cal/bandwidth_calibration.c) Bandwidth calibration test code that adjusts the bandwidth according to a reference PG_COUNT value. Refer the header of each example source for more detail."
+
+config TEST_TIMER
+    bool "Run exmaple: (ex_18_timer/timer_example.c) This example demonstrates how to enable one of DW IC internal timers. Refer the header of each example source for more detail."
+
+config TEST_TX_POWER_ADJUSTMENT
+    bool "Run exmaple: (ex_19_tx_power_adjustment/tx_power_adjustment_example.c) This example demonstrates how to the dwt_adjust_tx_power API can be used to apply. Refer the header of each example source for more detail."
+
+config TEST_SIMPLE_AES
+    bool "Run exmaple: (ex_20_simple_aes/simple_aes.c) This is a simple example to demonstrate the dw3xxx ability to encrypt and decrypt data using the CCM* methodology. Refer the header of each example source for more detail."
+
+config TEST_LINEAR_TX_POWER
+    bool "Run exmaple: (ex_21_linear_tx_power/linear_tx_power_example.c) TThis example demonstrates how the dwt_calculate_linear_tx_setting API allows to calculate tx power setting with a linear output power behavior.. Refer the header of each example source for more detail."
+
+endchoice
+
+endmenu
+
+menu "Zephyr Kernel"
+source "$ZEPHYR_BASE/Kconfig.zephyr"
+endmenu
+

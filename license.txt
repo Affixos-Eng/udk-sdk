@@ -1,0 +1,22 @@
+This Disclaimer applies to Qorvo's QM33 binary drivers and Qorvo's QM33 example 
+codes (collectively “Decawave Software”) provided by Decawave Ltd. (“Decawave”), 
+now Qorvo, Inc.
+
+It applies to the following files:
+
+./app/006_ex_uwb/*.c
+./drivers/dwt_uwb_driver/*.*
+
+1. The above files were extracted from the SDK package at:
+   https://www.qorvo.com/products/p/QM33120WDK1#evaluation-tools
+   The following patch file lists all modifications made by LEAPS: 
+   patch/QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1_LEAPS.patch
+2. The Qorvo provided code in the folders above is provided in an “as-is” 
+ condition. No warranties, whether express, implied or statutory, including, 
+ but not limited to, implied warranties of merchantability and fitness for a 
+ particular purpose apply to this software. Qorvo Inc. shall not, in any 
+ circumstances, be liable for special, incidental, or consequential damages, 
+ for any reason whatsoever.
+3. The latest Qorvo drivers and libraries are available through 
+ the Qorvo website (www.qorvo.com).
+4. For first-line support on this SDK, please contact apps-support@leapslabs.com

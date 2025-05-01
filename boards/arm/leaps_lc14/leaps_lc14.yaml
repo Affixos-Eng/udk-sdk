@@ -1,0 +1,16 @@
+identifier: leaps_lc14
+name: LEAPS-LC14
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - usb_device
+  - usb_cdc
+  - ble
+  - ieee802154
+  - pwm
+  - watchdog
+  - counter

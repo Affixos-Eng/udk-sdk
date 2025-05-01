@@ -1,0 +1,300 @@
+/*
+ * LEAPS - Low Energy Accurate Positioning System.
+ *
+ * (c) 2024, LEAPS - All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+#include "leaps_lc14-pinctrl.dtsi"
+
+/ {
+	model = "LEAPS LC14";
+	compatible = "leaps,lc14";
+
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,uart-mcumgr = &uart0;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot1_partition;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led0: led_0 {
+		  gpios = <&gpio0 27 GPIO_ACTIVE_LOW>;
+		  label = "Red LED";
+		};
+
+		led1: led_1 {
+		  gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+		  label = "Green LED";
+		};
+
+		led2: led_2 {
+		  gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
+		  label = "Blue LED";
+		};
+
+		led3: led_3 {
+		  gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
+		  label = "Green LED";
+		};
+
+		led4: led_4 {
+		  gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+		  label = "Green LED";
+		};
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+
+		button0: button_0 {
+			gpios = <&gpio0 26 GPIO_PULL_UP>;
+			label = "Button 0";
+		};
+
+		button1: button_1 {
+			gpios = <&gpio0 28 GPIO_PULL_UP>;
+			label = "Button 1";
+		};
+
+		button2: button_2 {
+			gpios = <&gpio1 11 GPIO_PULL_UP>;
+			label = "Button 2";
+		};
+	};
+
+	generic-gpios {
+		compatible = "gpio-generic";
+
+		uwb0_reset_pin: gpio_0 {
+			gpios = <&gpio0 15 0>;
+			label = "DW3000 Reset pin";
+		};
+
+		uwb0_irq_pin: gpio_1 {
+			gpios = <&gpio0 25 0>;
+			label = "DW3000 IRQ pin";
+		};
+
+		uwb0_cs_pin: uwb0_cs {
+			gpios = <&gpio0 20 GPIO_ACTIVE_LOW>;
+			label = "DW3000 CS pin";
+		};
+
+		uart_tx_pin: uart_tx {
+			gpios = <&gpio1 13 0>;
+			label = "UART TX pin";
+		};
+
+		uart_rx_pin: uart_rx {
+			gpios = <&gpio1 15 0>;
+			label = "UART RX pin";
+		};
+
+		api_spis_csn_pin: api_spis_csn {
+			gpios = <&gpio0 29 0>;
+			label = "Serial API SPI CS pin";
+		};
+
+		api_uart_rx_pin: api_uart_rx {
+			gpios = <&gpio1 15 0>;
+			label = "Serial API UART RX pin";
+		};
+
+		api_event_pin: api_event {
+			gpios = <&gpio0 31 0>;
+			label = "Serial API event pin";
+		};
+
+		acc_int_pin: acc_int {
+			gpios = <&gpio1 1 0>;
+			label = "ACC interrupt pin";
+		};
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		pwm_alarm_led: pwm_alarm_led_0 {
+			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		};
+
+		pwm_buzzer0: pwm_buzzer_0 {
+			pwms = <&pwm0 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		};
+
+		pwm_motor0: pwm_motor_0 {
+			pwms = <&pwm0 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		};
+	};
+
+	/* These aliases are provided for application compatibility */
+	aliases {
+		led0 = &led0;
+		led1 = &led1;
+		led2 = &led2;
+		ledr = &led0;
+		ledg = &led1;
+		ledb = &led2;
+
+		ledg-latup = &led3;
+		ledg-latdn = &led4;
+
+		sw0 = &button0;
+		sw1 = &button1;
+		sw2 = &button2;
+
+		hr-timer-1 = &timer2;
+		uart-api = &uart0;
+		uart-api-rx = &api_uart_rx_pin;
+		spis-api = &spi2;
+		uwb0-spi = &spi3;
+		hr-timer-2 = &rtc2;
+		uwb0-reset = &uwb0_reset_pin;
+		uwb0-irq = &uwb0_irq_pin;
+		uwb0-cs = &uwb0_cs_pin;
+		acc-int = &acc_int_pin;
+		uart-tx-pin = &uart_tx_pin;
+		uart-rx-pin = &uart_rx_pin;
+
+		pwm-alarm-led = &pwm_alarm_led;
+		pwm-buzzer0 = &pwm_buzzer0;
+		pwm-motor0 = &pwm_motor0;
+	};
+
+	/* Battery voltage measurement */
+	adc_vbatt {
+			compatible = "voltage-divider";
+			io-channels = <&adc 1>;
+			output-ohms = <10000000>;
+			full-ohms = <(10000000 + 4300000)>;
+	};
+
+	/* VCC self voltage measurement */
+	adc_vcc {
+			compatible = "voltage-divider";
+			io-channels = <&adc 8>;
+			output-ohms = <1>;
+			full-ohms = <1>;
+	};
+};
+
+&adc {
+	status = "okay";
+};
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/guides/dts/index.html#flash-partitions
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "bootloader";
+			reg = <0x000000000 0x0000B000>;
+		};
+
+		storage1_partition: partition@B000 {
+			label = "storage1";
+			reg = <0x0000B000 0x00001000>;
+		};
+
+		storage2_partition: partition@C000 {
+			label = "storage2";
+			reg = <0x0000C000 0x00001000>;
+		};
+
+		slot0_partition: partition@D000 {
+			label = "image-0";
+			reg = <0x0000D000 0x000040000>;
+		};
+
+		slot1_partition: partition@80000 {
+			label = "image-1";
+			reg = <0x0004D000 0x0000B3000>;
+		};
+	};
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+	sense-edge-mask = <0xB4000000>;
+};
+
+&gpio1 {
+	status = "okay";
+	sense-edge-mask = <0x8802>;
+};
+
+&timer2 {
+	status = "okay";
+};
+
+&spi0 {
+	/* Cannot be used together with i2c0. */
+	/* status = "okay"; */
+};
+
+&spi3 {
+	status = "okay";
+	cs-gpios = <&gpio0 20 GPIO_ACTIVE_LOW>;
+	clock-frequency = <32000000>;
+	pinctrl-0 = <&spi3_default>;
+	pinctrl-1 = <&spi3_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&uart0 {
+	status = "okay";
+	compatible = "nordic,nrf-uarte";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&spi2 {
+	compatible = "nordic,nrf-spis";
+	status = "okay";
+	cs-gpios = <&gpio0 29 0>;
+	def-char = <0>;
+	pinctrl-0 = <&spi2_default>;
+	pinctrl-1 = <&spi2_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&i2c0 {
+	compatible = "nordic,nrf-twim";
+	status = "okay";
+	pinctrl-0 = <&i2c0_default>;
+	pinctrl-1 = <&i2c0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+};

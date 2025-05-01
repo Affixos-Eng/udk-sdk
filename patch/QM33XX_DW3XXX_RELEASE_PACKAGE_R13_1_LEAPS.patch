@@ -1,0 +1,1907 @@
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API: Build_Platforms
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Shared/dwt_uwb_driver: cmake
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Shared/dwt_uwb_driver/deca_device_api.h QM33XX_DW3XXX_LEAPS_MODIFIED/API/Shared/dwt_uwb_driver/deca_device_api.h
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Shared/dwt_uwb_driver/deca_device_api.h	2024-06-19 11:29:46.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Shared/dwt_uwb_driver/deca_device_api.h	2024-11-02 05:51:03.000000000 +0100
+@@ -51,7 +51,7 @@
+ 
+ #define DWT_DW3720_PDOA_DEV_ID   DWT_QM33120_PDOA_DEV_ID   /* Backward compatibility definition of the P/N */
+ 
+-#ifdef AUTO_DW3300Q_DRIVER
++#if defined(AUTO_DW3300Q_DRIVER) || defined(CONFIG_TEST_SIMPLE_TX_AUTOMOTIVE)
+ /* Automotive build: define below to enable hardened PLL calibration for automotive application. */
+ #define AUTO_PLL_CAL
+ #endif
+@@ -3181,6 +3181,40 @@
+      */
+     void dwt_wakeup_ic(void);
+ 
++    /****************************************************************************
++     *
++     *                              port function prototypes
++     *
++     *******************************************************************************/
++
++    /* DW IC IRQ handler definition. */
++    typedef void (*port_dwic_isr_t)(void);
++
++    /* @fn      port_DisableEXT_IRQ
++     * @brief   wrapper to disable DW_IRQ pin IRQ
++     * */
++    void port_DisableEXT_IRQ(void);
++
++    /* @fn      port_EnableEXT_IRQ
++     * @brief   wrapper to enable DW_IRQ pin IRQ
++     * */
++    void port_EnableEXT_IRQ(void);
++
++    /* @fn      port_GetEXT_IRQStatus
++     * @brief   wrapper to read a DW_IRQ pin IRQ status
++     * */
++    uint32_t port_GetEXT_IRQStatus(void);
++
++    /* @fn      port_CheckEXT_IRQ
++     * @brief   wrapper to read DW_IRQ input pin state
++     * */
++    uint32_t port_CheckEXT_IRQ(void);
++
++    /* @fn      dw_irq_init
++     * @brief   wrapper to configure IRQ
++     * */
++    // ---------------------------------------------------------------------------
++    
+     // ---------------------------------------------------------------------------
+     //
+     // NB: The purpose of the deca_mutex.c file is to provide for microprocessor interrupt enable/disable, this is used for
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Shared/dwt_uwb_driver/LICENSES: LicenseRef-QORVO-2.txt
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Shared/dwt_uwb_driver/LICENSES: license.txt
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Shared/dwt_uwb_driver: utest
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src: deca_probe_interface.h
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples: CMakeLists.txt
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples: custom-sections.ld
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_00a_reading_dev_id: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_00a_reading_dev_id/read_dev_id.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_00a_reading_dev_id/read_dev_id.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_00a_reading_dev_id/read_dev_id.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_00a_reading_dev_id/read_dev_id.c	2024-11-02 15:57:34.000000000 +0100
+@@ -8,13 +8,12 @@
+  *
+  * @copyright SPDX-FileCopyrightText: Copyright (c) 2024 Qorvo US, Inc.
+  *            SPDX-License-Identifier: LicenseRef-QORVO-2
+- * 
++ *
+  */
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <stdio.h>
+ 
+ #if defined(TEST_READING_DEV_ID)
+@@ -24,7 +23,7 @@
+ /* Example application name and version to display on LCD screen/VCOM port. */
+ #define APP_NAME "READ DEV ID      "
+ 
+-#define USE_SPI2 1 // set this to 1 to use DW37X0 SPI2
++#define USE_SPI2 0 // set this to 1 to use DW37X0 SPI2
+ 
+ /**
+  * Application entry point.
+@@ -41,7 +40,7 @@
+     /* Display application name on LCD. */
+     test_run_info((unsigned char *)APP_NAME);
+ 
+-    /* Configure SPI rate, DW3000 supports up to 38 MHz */
++    /* Configure SPI rate, DW3000 supports up to 36 MHz */
+     port_set_dw_ic_spi_fastrate();
+ 
+     /* Reset DW IC */
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01a_simple_tx: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01a_simple_tx/simple_tx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01a_simple_tx/simple_tx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01a_simple_tx/simple_tx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01a_simple_tx/simple_tx.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -24,7 +22,7 @@
+ /* Example application name */
+ #define APP_NAME "SIMPLE TX v1.0"
+ 
+-#define USE_SPI2 1 // set this to 1 to use DW37X0 SPI2
++#define USE_SPI2 0 // set this to 1 to use DW37X0 SPI2
+ 
+ /* Default communication configuration. We use default non-STS DW mode. */
+ static dwt_config_t config = {
+@@ -74,7 +72,7 @@
+     /* Display application name on LCD. */
+     test_run_info((unsigned char *)APP_NAME);
+ 
+-    /* Configure SPI rate, DW3000 supports up to 38 MHz */
++    /* Configure SPI rate, DW3000 supports up to 36 MHz */
+     port_set_dw_ic_spi_fastrate();
+ 
+     /* Reset DW IC */
+@@ -141,6 +139,17 @@
+     /* Configure the TX spectrum parameters (power PG delay and PG Count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever sending frames periodically. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01b_tx_sleep: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01b_tx_sleep/tx_sleep.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01b_tx_sleep/tx_sleep.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01b_tx_sleep/tx_sleep.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01b_tx_sleep/tx_sleep.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -103,6 +101,14 @@
+      */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 antenna are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure sleep and wake-up parameters. */
+     /* DWT_PGFCAL is added to make sure receiver is re-enabled on wake. */
+     dwt_configuresleep(DWT_CONFIG | DWT_PGFCAL, DWT_PRES_SLEEP | DWT_WAKE_CSN | DWT_WAKE_WUP | DWT_SLP_EN);
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01b_tx_sleep/tx_sleep_idleRC.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01b_tx_sleep/tx_sleep_idleRC.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01b_tx_sleep/tx_sleep_idleRC.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01b_tx_sleep/tx_sleep_idleRC.c	2024-11-02 05:51:03.000000000 +0100
+@@ -10,12 +10,9 @@
+  *            SPDX-License-Identifier: LicenseRef-QORVO-2
+  *
+  */
+-
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -69,7 +66,7 @@
+     /* Display application name on LCD. */
+     test_run_info((unsigned char *)APP_NAME);
+ 
+-    /* Configure SPI rate, DW3000 supports up to 38 MHz */
++    /* Configure SPI rate, DW3000 supports up to 36 MHz */
+     port_set_dw_ic_spi_fastrate();
+ 
+     /* Reset DW IC */
+@@ -105,6 +102,14 @@
+      */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 antenna are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure sleep and wake-up parameters. */
+     /* DWT_PGFCAL is added to make sure receiver is re-enabled on wake. */
+     dwt_configuresleep(DWT_CONFIG | DWT_PGFCAL, DWT_PRES_SLEEP | DWT_WAKE_CSN | DWT_WAKE_WUP | DWT_SLP_EN);
+@@ -154,7 +159,7 @@
+ }
+ #endif
+ /*****************************************************************************************************************************************************
+- * NOTES: 
++ * NOTES:
+  *
+  * 1. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
+  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01c_tx_sleep_auto: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01c_tx_sleep_auto/tx_sleep_auto.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01c_tx_sleep_auto/tx_sleep_auto.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01c_tx_sleep_auto/tx_sleep_auto.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01c_tx_sleep_auto/tx_sleep_auto.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_functions.h>
+ 
+ #if defined(TEST_TX_SLEEP_AUTO)
+@@ -95,6 +93,17 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure sleep and wake-up parameters. */
+     /* DWT_PGFCAL is added to make sure receiver is re-enabled on wake. */
+     dwt_configuresleep(DWT_CONFIG | DWT_PGFCAL, DWT_PRES_SLEEP | DWT_WAKE_WUP | DWT_SLP_EN);
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01d_tx_timed_sleep: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01d_tx_timed_sleep/tx_timed_sleep.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01d_tx_timed_sleep/tx_timed_sleep.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01d_tx_timed_sleep/tx_timed_sleep.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01d_tx_timed_sleep/tx_timed_sleep.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -125,6 +123,17 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure sleep and wake-up parameters. */
+     /* DWT_PGFCAL is added to make sure receiver is re-enabled on wake. */
+     dwt_configuresleep(DWT_CONFIG | DWT_PGFCAL, DWT_PRES_SLEEP | DWT_WAKE_CSN | DWT_SLEEP | DWT_SLP_EN);
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01e_tx_with_cca: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01e_tx_with_cca/tx_with_cca.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01e_tx_with_cca/tx_with_cca.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01e_tx_with_cca/tx_with_cca.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01e_tx_with_cca/tx_with_cca.c	2024-11-02 15:57:53.000000000 +0100
+@@ -30,9 +30,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -133,6 +131,17 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure preamble timeout to 3 PACs; if no preamble detected in this time we assume channel is clear. See NOTE 4*/
+     dwt_setpreambledetecttimeout(3);
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01g_simple_tx_sts_sdc: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01g_simple_tx_sts_sdc/simple_tx_sts_sdc.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01g_simple_tx_sts_sdc/simple_tx_sts_sdc.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01g_simple_tx_sts_sdc/simple_tx_sts_sdc.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01g_simple_tx_sts_sdc/simple_tx_sts_sdc.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+@@ -57,7 +55,7 @@
+  *       - bits 12-13: Frame Version: 00 - Using IEEE Std 802.15.4-2003 frames
+  *       - bits 14-15: Source Addressing Mode: 10 - Include source address in frame
+  *     - byte 2: sequence number, incremented for each new frame.
+- *     - byte 3/4: PAN ID (0xDECA) 
++ *     - byte 3/4: PAN ID (0xDECA)
+  *     - byte 5/6: destination address, see NOTE 8 below.
+  *     - byte 7/8: source address, see NOTE 7 below.
+  *     - byte 9 to 24: MAC payload, see NOTE 6 below.
+@@ -120,6 +118,14 @@
+     /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever sending frames periodically. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01h_simple_tx_pdoa: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01h_simple_tx_pdoa/simple_tx_pdoa.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01h_simple_tx_pdoa/simple_tx_pdoa.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01h_simple_tx_pdoa/simple_tx_pdoa.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01h_simple_tx_pdoa/simple_tx_pdoa.c	2024-11-02 05:51:03.000000000 +0100
+@@ -12,9 +12,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -101,6 +99,17 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever sending frames periodically. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01i_simple_tx_aes: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01i_simple_tx_aes/simple_tx_aes.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01i_simple_tx_aes/simple_tx_aes.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01i_simple_tx_aes/simple_tx_aes.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01i_simple_tx_aes/simple_tx_aes.c	2024-11-02 15:58:07.000000000 +0100
+@@ -10,10 +10,8 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <mac_802_15_8.h>
+-#include <port.h>
+ #include <shared_functions.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+@@ -129,6 +127,17 @@
+     // configure the tx spectrum parameters (power and PG delay)
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     dwt_set_keyreg_128((dwt_aes_key_t *)&aes_key);
+     dwt_configure_aes((dwt_aes_config_t *)&aes_config);
+ 
+@@ -204,6 +213,6 @@
+  *    configuration.
+  * 3. We use polled mode of operation here to keep the example as simple as possible, but the TXFRS status event can be used to generate an interrupt.
+  *    Please refer to DW IC User Manual for more details on "interrupts".
+- * 
++ *
+  * TODO: Correct and/or required notes for this example can be added later.
+  ****************************************************************************************************************************************************/
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01j_simple_tx_automotive: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01j_simple_tx_automotive/simple_tx_automotive.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01j_simple_tx_automotive/simple_tx_automotive.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_01j_simple_tx_automotive/simple_tx_automotive.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_01j_simple_tx_automotive/simple_tx_automotive.c	2024-11-02 05:51:03.000000000 +0100
+@@ -10,11 +10,9 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <mac_802_15_8.h>
+ #include <mac_802_15_8.h>
+-#include <port.h>
+ #include <shared_functions.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+@@ -26,7 +24,7 @@
+ /* Example application name and version to display on LCD screen. */
+ #define APP_NAME "AUTOMOTIVE TX"
+ 
+-#define USE_SPI2 1 // set this to 1 to use DW37X0 SPI2
++#define USE_SPI2 0 // set this to 1 to use DW37X0 SPI2
+ 
+ /* Values for the PG_DELAY and TX_POWER registers reflect the bandwidth and power of the spectrum at the current
+  * temperature. These values can be calibrated prior to taking reference measurements. See NOTE 1 below. */
+@@ -148,6 +146,17 @@
+     /* Configure the TX spectrum parameters (power PG delay and PG Count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++    
+     /* Loop forever sending frames periodically. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02a_simple_rx: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02a_simple_rx/simple_rx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02a_simple_rx/simple_rx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02a_simple_rx/simple_rx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02a_simple_rx/simple_rx.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+@@ -88,6 +86,17 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever receiving frames. */
+     while (TRUE)
+     {
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02a_simple_rx/simple_rx_nlos.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02a_simple_rx/simple_rx_nlos.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02a_simple_rx/simple_rx_nlos.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02a_simple_rx/simple_rx_nlos.c	2024-11-02 05:51:03.000000000 +0100
+@@ -15,10 +15,8 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <math.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+@@ -121,6 +119,17 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* See NOTE 4 below. */
+     dwt_configciadiag(DW_CIA_DIAG_LOG_ALL);
+     /* Loop forever receiving frames. */
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02c_rx_diagnostics: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02c_rx_diagnostics/rx_diagnostics.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02c_rx_diagnostics/rx_diagnostics.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02c_rx_diagnostics/rx_diagnostics.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02c_rx_diagnostics/rx_diagnostics.c	2024-11-02 05:51:03.000000000 +0100
+@@ -18,9 +18,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -102,6 +100,18 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
++
+     /* Activate event counters. */
+     dwt_configeventcounters(1);
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02d_rx_sniff: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02d_rx_sniff/rx_sniff.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02d_rx_sniff/rx_sniff.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02d_rx_sniff/rx_sniff.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02d_rx_sniff/rx_sniff.c	2024-11-02 05:51:03.000000000 +0100
+@@ -10,9 +10,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+@@ -96,6 +94,17 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure SNIFF mode. */
+     dwt_setsniffmode(1, SNIFF_ON_TIME, SNIFF_OFF_TIME);
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02e_rx_dbl_buff: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02e_rx_dbl_buff/double_buffer_rx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02e_rx_dbl_buff/double_buffer_rx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02e_rx_dbl_buff/double_buffer_rx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02e_rx_dbl_buff/double_buffer_rx.c	2024-11-02 05:51:03.000000000 +0100
+@@ -12,12 +12,9 @@
+  *            SPDX-License-Identifier: LicenseRef-QORVO-2
+  *
+  */
+-
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -105,6 +102,17 @@
+             while (1) { };
+         }
+ 
++        /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++        dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++        #if defined (CONFIG_BOARD_LEAPS_LC14)
++        /* Setting RF port 1 only */
++        dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++        #else
++        /* Disable manual, switch to default, by default 2 anten are used */
++        dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++        #endif
++
+         /* Define all the callback functions that will be called by the DW IC driver as a result of DW IC events. */
+         cbs.cbRxOk = rx_ok_cb;
+         cbs.cbRxErr = rx_err_cb;
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02f_rx_with_crystal_trim: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02f_rx_with_crystal_trim/rx_with_xtal_trim.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02f_rx_with_crystal_trim/rx_with_xtal_trim.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02f_rx_with_crystal_trim/rx_with_xtal_trim.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02f_rx_with_crystal_trim/rx_with_xtal_trim.c	2024-11-02 05:51:03.000000000 +0100
+@@ -14,13 +14,10 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+-
+ #include <math.h>
+ 
+ #if defined(TEST_RX_TRIM)
+@@ -107,6 +104,16 @@
+         test_run_info((unsigned char *)"CONFIG FAILED     ");
+         while (1) { };
+     }
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
+ 
+     /* Read the initial crystal trimming value. This needs to be done after dwt_initialise(), which sets up initial trimming code.*/
+     uCurrentTrim_val = dwt_getxtaltrim();
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02g_simple_rx_sts_sdc: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02g_simple_rx_sts_sdc/simple_rx_sts_sdc.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02g_simple_rx_sts_sdc/simple_rx_sts_sdc.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02g_simple_rx_sts_sdc/simple_rx_sts_sdc.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02g_simple_rx_sts_sdc/simple_rx_sts_sdc.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,10 +11,8 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <float.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+@@ -67,7 +65,7 @@
+     /* Display application name on LCD. */
+     test_run_info((unsigned char *)APP_NAME);
+ 
+-    /* Configure SPI rate, DW3000 supports up to 38 MHz */
++    /* Configure SPI rate, DW3000 supports up to 36 MHz */
+     port_set_dw_ic_spi_fastrate();
+ 
+     /* Reset DW IC */
+@@ -97,6 +95,17 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever receiving frames. */
+     while (TRUE)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02h_simple_rx_pdoa: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02h_simple_rx_pdoa/simple_rx_pdoa.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02h_simple_rx_pdoa/simple_rx_pdoa.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02h_simple_rx_pdoa/simple_rx_pdoa.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02h_simple_rx_pdoa/simple_rx_pdoa.c	2024-11-02 05:51:03.000000000 +0100
+@@ -13,9 +13,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -28,7 +26,7 @@
+ /* Example application name and version to display on LCD screen. */
+ #define APP_NAME "PDOA example"
+ 
+-#define USE_SPI2 1 // set this to 1 to use DW37X0 SPI2
++#define USE_SPI2 0 // set this to 1 to use DW37X0 SPI2
+ 
+ #define PI  3.14159265358979f
+ 
+@@ -127,6 +125,16 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
+     /* Define all the callback functions that will be called by the DW IC driver as a result of DW IC events. */
+     cbs.cbRxOk = rx_ok_cb;
+     cbs.cbRxTo = rx_err_cb;
+@@ -157,6 +165,7 @@
+             sprintf((char *)&pdoa_message_data, "PDOA val = %d, Degrees = %f", last_pdoa_val, degrees);
+             test_run_info((unsigned char *)&pdoa_message_data);
+         }
++        Sleep(1);
+     }
+     return DWT_SUCCESS;
+ }
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02i_simple_rx_aes: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02i_simple_rx_aes/simple_rx_aes.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02i_simple_rx_aes/simple_rx_aes.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02i_simple_rx_aes/simple_rx_aes.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02i_simple_rx_aes/simple_rx_aes.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,10 +11,8 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <mac_802_15_8.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdint.h>
+@@ -114,6 +112,17 @@
+         while (1) { };
+     }
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     dwt_set_keyreg_128((dwt_aes_key_t *)&aes_key);
+     dwt_configure_aes((dwt_aes_config_t *)&aes_config);
+ 
+@@ -185,6 +194,6 @@
+  *    optimise system's overall performance (e.g. timeout after a given time, automatic re-enabling of reception in case of errors, etc.).
+  * 3. We use polled mode of operation here to keep the example as simple as possible, but RXFCG and error/timeout status events can be used to generate
+  *    interrupts. Please refer to DW IC User Manual for more details on "interrupts".
+- * 
++ *
+  * TODO: Correct and/or required notes for this example can be added later.
+  ****************************************************************************************************************************************************/
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02j_rx_adc_capture: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02j_rx_adc_capture/rx_adc_capture.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02j_rx_adc_capture/rx_adc_capture.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02j_rx_adc_capture/rx_adc_capture.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02j_rx_adc_capture/rx_adc_capture.c	2024-11-02 05:51:03.000000000 +0100
+@@ -1,6 +1,6 @@
+ /*! ----------------------------------------------------------------------------
+  *  @file    rx_adc_capture.c
+- *  @brief   This test captures the ADC samples on receiving a signal (and reads 
++ *  @brief   This test captures the ADC samples on receiving a signal (and reads
+  *           the captured ADC buffer into a file - Only on Nordic EVB).
+  *
+  * @author Decawave
+@@ -12,9 +12,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdint.h>
+@@ -55,8 +53,8 @@
+  */
+ int rx_adc_capture(void)
+ {
+-    int i = 0, j = 0;
+-    int8_t adc_results[COMPLEX_SAMPLES]; 
++    // int i = 0, j = 0;
++    int8_t adc_results[COMPLEX_SAMPLES];
+     dwt_capture_adc_t capture_adc;
+ 
+     capture_adc.length = COMPLEX_SAMPLES;
+@@ -96,16 +94,16 @@
+ 
+     // Capture ADC samples
+     dwt_capture_adc_samples(&capture_adc);
+-    
++
+ #if PRINT_TO_FILE
+     printf("\nThresholds: %d, %d, %d, %d\n", (int)capture_adc.thresholds[0], (int)capture_adc.thresholds[1], (int)capture_adc.thresholds[2], (int)capture_adc.thresholds[3]);
+-    
++
+     FILE *fp1 = fopen("I_Q_DATA_E0.csv", "w+");
+ 
+     // Reading the buffer 128 times with an offset of 96 because inside the dwt_read_adc_samples()
+     // We right shift the 256 by 4 = 16 and multiply by 6 (num_bytes = 16*6 = 96) and pass the num_bytes
+     // To ull_readaccdata(). From 96 bytes the format is of each 6 bytes: Ipos, Ineg, 0, Qpos, Qneg, 0
+-    // Ignoring the zeros, from 4 bytes of Ipos, Ineg, Qpos, Qneg we get 16 bytes of data. 
++    // Ignoring the zeros, from 4 bytes of Ipos, Ineg, Qpos, Qneg we get 16 bytes of data.
+     // 8 bytes for I and 8 bytes Q in total 16 bytes. Loop over 16 times i.e 16*16 = 256 bytes of data.
+     // For 256 Complex Samples we have 128 I and 128 Q results in file for post processing.
+     // Total number of samples read are 128*128 = 16384 for each I and Q total 32768 samples.
+@@ -114,7 +112,7 @@
+        // Read the captured ADC samples
+        dwt_read_adc_samples(&capture_adc);
+        capture_adc.sample_start_offset += 96;
+-       
++
+        for(i = 0; i < COMPLEX_SAMPLES; i+=2)
+        {
+            fprintf(fp1, "%d, %d\n", (int)capture_adc.buffer[i], (int)capture_adc.buffer[i+1]);
+@@ -129,9 +127,9 @@
+ 
+ /*****************************************************************************************************************************************************
+  * NOTES:
+- * 
++ *
+  * 1. Desired configuration by user may be different to the current programmed configuration. dwt_configure is called to set desired
+  *    configuration.
+- * 
++ *
+  * TODO: Correct and/or required notes for this example can be added later.
+  ****************************************************************************************************************************************************/
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02k_simple_rx_cir: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02k_simple_rx_cir/simple_rx_cir.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02k_simple_rx_cir/simple_rx_cir.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_02k_simple_rx_cir/simple_rx_cir.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_02k_simple_rx_cir/simple_rx_cir.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -48,7 +46,7 @@
+ static uint8_t cir_buf[DWT_CIR_LEN_MAX * 2 * 3];  /* A complex sample takes up to 2 32-bit words */
+ static char str_to_print[DWT_CIR_LEN_MAX * 2 * 3]; /* Buffer mostly used to print the CIR data in print_cir*/
+ 
+-/* 
++/*
+     Print the CIR data in a format that can be easily plotted.
+ */
+ static void print_cir(uint8_t *buf, int n_samples, dwt_cir_read_mode_e mode) {
+@@ -68,9 +66,9 @@
+             mid_img = *ptr++;
+             hi_img = *ptr++;
+             sign_img = ((hi_img&0x80) == 0x80) ? 0xFF : 0;
+-            sprintf(str_to_print, "%ld,%ld,", (int32_t)((uint32_t)sign_re<<24 | (uint32_t)hi_re<<16 | (uint32_t)mid_re<<8 | lo_re), (int32_t)((uint32_t)sign_img<<24 | (uint32_t)hi_img<<16 | (uint32_t)mid_img<<8 | lo_img));
+-            test_run_info((unsigned char *)str_to_print);   
+-            nrf_delay_ms(1); // Delay to allow the UART to keep up with the data
++            sprintf(str_to_print, "%d,%d,", (int32_t)((uint32_t)sign_re<<24 | (uint32_t)hi_re<<16 | (uint32_t)mid_re<<8 | lo_re), (int32_t)((uint32_t)sign_img<<24 | (uint32_t)hi_img<<16 | (uint32_t)mid_img<<8 | lo_img));
++            test_run_info((unsigned char *)str_to_print);
++            hal_delay_ms(1); // Delay to allow the UART to keep up with the data
+         }
+     }
+     else {
+@@ -80,9 +78,9 @@
+             hi_re = *ptr++;
+             lo_img = *ptr++;
+             hi_img = *ptr++;
+-            sprintf(str_to_print, "%ld,%ld,", "%d,%d,", (int16_t)(hi_re<<8 | lo_re), (int16_t)(hi_img<<8 | lo_img));
++            sprintf(str_to_print, "%d,%d,", "%d,%d,", ((int16_t)(hi_re<<8 | lo_re)), ((int16_t)(hi_img<<8 | lo_img)));
+             test_run_info((unsigned char *)str_to_print);
+-            nrf_delay_ms(1); // Delay to allow the UART to keep up with the data
++            hal_delay_ms(1); // Delay to allow the UART to keep up with the data
+         }
+     }
+     test_run_info((unsigned char *)"\n_________________________________\r\n");
+@@ -94,9 +92,9 @@
+ int simple_rx_cir(void)
+ {
+     /* Hold copy of status register state here for reference so that it can be examined at a debug breakpoint. */
+-    uint32_t status_reg;
++    // uint32_t status_reg;
+     /* Hold copy of frame length of frame received (if good) so that it can be examined at a debug breakpoint. */
+-    uint16_t frame_len;
++    // uint16_t frame_len;
+ 
+     /* Display application name on LCD. */
+     test_run_info((unsigned char *)APP_NAME);
+@@ -168,10 +166,10 @@
+ 
+             sprintf(str_to_print,"Printing Ipatov CIR\r\n");
+             test_run_info((unsigned char *)str_to_print);
+-            
++
+             /* Start reading CIR data from Ipatov offset */
+             dwt_acc_idx_e acc_idx = DWT_ACC_IDX_IP_M ;
+-            
++
+             /*
+                 Choose the mode you want to print the data:
+                     - DWT_CIR_READ_FULL
+@@ -179,13 +177,13 @@
+                     - DWT_CIR_READ_MID
+                     - DWT_CIR_READ_HI
+             */
+-            dwt_cir_read_mode_e modes = DWT_CIR_READ_FULL; 
++            dwt_cir_read_mode_e modes = DWT_CIR_READ_FULL;
+ 
+             /* Ipatov data */
+             int n_samples = n_samples_ipatov;
+             dwt_readcir((uint32_t*)cir_buf, acc_idx, 0, n_samples, modes);
+             print_cir(cir_buf, n_samples, modes);
+-            
++
+             /* STS0 data, not always available, it depends on the STS and PDOA mode. */
+             CLEAR_ARRAY(cir_buf,sizeof(cir_buf));
+             sprintf(str_to_print,"\r\nPrinting STS0 CIR\r\n");
+@@ -194,7 +192,7 @@
+             n_samples = DWT_CIR_LEN_STS;
+             dwt_readcir((uint32_t*)cir_buf, acc_idx, 0, n_samples, modes);
+             print_cir(cir_buf, n_samples, modes);
+-            
++
+             ///* STS1 data, not always available, it depends on the STS and PDOA mode. */
+             CLEAR_ARRAY(cir_buf,sizeof(cir_buf));
+             sprintf(str_to_print,"\r\nPrinting STS1 CIR\r\n");
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03a_tx_wait_resp: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_03a_tx_wait_resp/tx_wait_resp.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03a_tx_wait_resp/tx_wait_resp.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_03a_tx_wait_resp/tx_wait_resp.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03a_tx_wait_resp/tx_wait_resp.c	2024-11-02 05:51:03.000000000 +0100
+@@ -16,9 +16,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -121,6 +119,17 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Set delay to turn reception on after transmission of the frame. See NOTE 3 below. */
+     dwt_setrxaftertxdelay(TX_TO_RX_DELAY_UUS);
+ 
+@@ -210,5 +219,5 @@
+  *          for longer than that, this signal turns into a periodic signal where both ON and OFF phases last for LED blink time.
+  *        - GPIO 3: TXLED signal. Driven high from the start of a transmission for the LED blink time.
+  *        - GPIO 5: EXTTXE signal. Follows the transmitter enabled state.
+- *        - GPIO 6: EXTRXE signal. Follows the receiver enabled state. 
++ *        - GPIO 6: EXTRXE signal. Follows the receiver enabled state.
+  ****************************************************************************************************************************************************/
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03b_rx_send_resp: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_03b_rx_send_resp/rx_send_resp.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03b_rx_send_resp/rx_send_resp.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_03b_rx_send_resp/rx_send_resp.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03b_rx_send_resp/rx_send_resp.c	2024-11-02 05:51:03.000000000 +0100
+@@ -14,9 +14,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -119,6 +117,17 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever sending and receiving frames periodically. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03d_tx_wait_resp_interrupts: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_03d_tx_wait_resp_interrupts/tx_wait_resp_int.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03d_tx_wait_resp_interrupts/tx_wait_resp_int.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_03d_tx_wait_resp_interrupts/tx_wait_resp_int.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_03d_tx_wait_resp_interrupts/tx_wait_resp_int.c	2024-11-02 05:51:03.000000000 +0100
+@@ -13,9 +13,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ 
+ #if defined(TEST_TX_WAIT_RESP_INT)
+@@ -125,6 +123,16 @@
+     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
+     /* Define all the callback functions that will be called by the DW IC driver as a result of DW IC events. */
+     cbs.cbTxDone = tx_conf_cb;
+     cbs.cbRxOk = rx_ok_cb;
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_04a_cont_wave: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_04a_cont_wave/continuous_wave.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_04a_cont_wave/continuous_wave.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_04a_cont_wave/continuous_wave.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_04a_cont_wave/continuous_wave.c	2024-11-02 05:51:03.000000000 +0100
+@@ -12,9 +12,8 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
++
+ 
+ #if defined(TEST_CONTINUOUS_WAVE)
+ 
+@@ -83,6 +82,17 @@
+     }
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Activate continuous wave mode. */
+     dwt_configcwmode();
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_04b_cont_frame: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_04b_cont_frame/continuous_frame.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_04b_cont_frame/continuous_frame.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_04b_cont_frame/continuous_frame.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_04b_cont_frame/continuous_frame.c	2024-11-02 05:51:03.000000000 +0100
+@@ -13,9 +13,8 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
++
+ 
+ #if defined(TEST_CONTINUOUS_FRAME)
+ 
+@@ -95,6 +94,17 @@
+     }
+     dwt_configuretxrf(&txconfig_options);
+ 
++    /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
++    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Activate continuous frame mode. */
+     dwt_configcontinuousframemode(CONT_FRAME_PERIOD);
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05a_ds_twr_init: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator.c	2024-11-02 05:51:03.000000000 +0100
+@@ -19,9 +19,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -160,6 +158,14 @@
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+     // dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever initiating ranging exchanges. */
+     while (1)
+     {
+@@ -241,7 +247,7 @@
+             /* Clear RX error/timeout events in the DW IC status register. */
+             dwt_writesysstatuslo(SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR | DWT_INT_TXFRS_BIT_MASK);
+         }
+-     
++
+ #if SLEEP_EN
+         /* Put DW IC to sleep. Go to IDLE state after wakeup*/
+         dwt_entersleep(DWT_DW_IDLE);
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator_sts.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator_sts.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator_sts.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05a_ds_twr_init/ds_twr_initiator_sts.c	2024-11-02 05:51:03.000000000 +0100
+@@ -25,10 +25,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+-#include <deca_types.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+@@ -217,6 +214,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help diagnostics, and also TX/RX LEDs */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop for user defined number of ranges. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05b_ds_twr_resp: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder.c	2024-11-02 05:51:03.000000000 +0100
+@@ -18,9 +18,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -153,6 +151,14 @@
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+     // dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever responding to ranging requests. */
+     while (1)
+     {
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder_sts.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder_sts.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder_sts.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05b_ds_twr_resp/ds_twr_responder_sts.c	2024-11-02 05:51:03.000000000 +0100
+@@ -26,9 +26,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+@@ -205,6 +203,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help diagnostics, and also TX/RX LEDs */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     // Delay between the response frame and final frame
+     dwt_setrxaftertxdelay(RESP_TX_TO_FINAL_RX_DLY_UUS);
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05c_ds_twr_init_sts_sdc: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05c_ds_twr_init_sts_sdc/ds_twr_sts_sdc_initiator.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05c_ds_twr_init_sts_sdc/ds_twr_sts_sdc_initiator.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05c_ds_twr_init_sts_sdc/ds_twr_sts_sdc_initiator.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05c_ds_twr_init_sts_sdc/ds_twr_sts_sdc_initiator.c	2024-11-02 05:51:03.000000000 +0100
+@@ -22,9 +22,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -158,6 +156,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help debug */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever initiating ranging exchanges. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05d_ds_twr_resp_sts_sdc: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05d_ds_twr_resp_sts_sdc/ds_twr_sts_sdc_responder.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05d_ds_twr_resp_sts_sdc/ds_twr_sts_sdc_responder.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_05d_ds_twr_resp_sts_sdc/ds_twr_sts_sdc_responder.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_05d_ds_twr_resp_sts_sdc/ds_twr_sts_sdc_responder.c	2024-11-02 15:58:20.000000000 +0100
+@@ -20,9 +20,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -156,6 +154,14 @@
+      * Note, in real low power applications the LEDs should not be used. */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever responding to ranging requests. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator.c	2024-11-02 05:51:03.000000000 +0100
+@@ -18,9 +18,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -149,6 +147,14 @@
+      * Note, in real low power applications the LEDs should not be used. */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever initiating ranging exchanges. */
+     while (1)
+     {
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts.c	2024-11-02 05:51:03.000000000 +0100
+@@ -25,10 +25,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+-#include <deca_types.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+@@ -207,6 +204,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help diagnostics, and also TX/RX LEDs */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop for user defined number of ranges. */
+     while (1)
+     {
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts_no_data.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts_no_data.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts_no_data.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts_no_data.c	2024-11-02 05:51:03.000000000 +0100
+@@ -46,10 +46,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+-#include <deca_types.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+@@ -204,6 +201,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help diagnostics, and also TX/RX LEDs */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure DW IC. See NOTE 12 below. */
+     /* if the dwt_configure returns DWT_ERROR either the PLL or RX calibration has failed the host should reset the device */
+     if (dwt_configure(&config_option_sp3))
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder.c	2024-11-02 05:51:03.000000000 +0100
+@@ -16,9 +16,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -136,6 +134,14 @@
+      * Note, in real low power applications the LEDs should not be used. */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever responding to ranging requests. */
+     while (1)
+     {
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts.c	2024-11-02 05:51:03.000000000 +0100
+@@ -26,9 +26,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+@@ -178,6 +176,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help diagnostics, and also TX/RX LEDs */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever responding to ranging requests. */
+     while (1)
+     {
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts_no_data.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts_no_data.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts_no_data.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts_no_data.c	2024-11-02 05:51:03.000000000 +0100
+@@ -45,9 +45,7 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+@@ -174,6 +172,14 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help diagnostics, and also TX/RX LEDs */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Configure DW IC. See NOTE 10 below. */
+     /* if the dwt_configure returns DWT_ERROR either the PLL or RX calibration has failed the host should reset the device */
+     if (dwt_configure(&config_option_sp3))
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06e_AES_ss_twr_initiator: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06e_AES_ss_twr_initiator/ss_aes_twr_initiator.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06e_AES_ss_twr_initiator/ss_aes_twr_initiator.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06e_AES_ss_twr_initiator/ss_aes_twr_initiator.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06e_AES_ss_twr_initiator/ss_aes_twr_initiator.c	2024-11-02 15:58:29.000000000 +0100
+@@ -20,10 +20,9 @@
+ #include "deca_probe_interface.h"
+ #include <config_options.h>
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <mac_802_15_4.h>
+-#include <port.h>
++
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -207,6 +206,15 @@
+     /* Next can enable TX/RX states output on GPIOs 5 and 6 to help debug */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
++
+     /*Configure the TX and RX AES jobs, the TX job is used to encrypt the Poll message,
+      * the RX job is used to decrypt the Response message */
+     aes_job_tx.mode = AES_Encrypt;                               /* this is encryption job */
+@@ -338,6 +346,10 @@
+ 
+                 tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
+                 distance = tof * SPEED_OF_LIGHT;
++
++                /* Display computed distance on LCD. */
++                snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
++                test_run_info((unsigned char *)dist_str);
+             }
+         }
+         else
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06f_AES_ss_twr_responder: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06f_AES_ss_twr_responder/ss_aes_twr_responder.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06f_AES_ss_twr_responder/ss_aes_twr_responder.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_06f_AES_ss_twr_responder/ss_aes_twr_responder.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_06f_AES_ss_twr_responder/ss_aes_twr_responder.c	2024-11-02 15:58:52.000000000 +0100
+@@ -19,10 +19,9 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <mac_802_15_4.h>
+-#include <port.h>
++
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -165,6 +164,15 @@
+      * Note, in real low power applications the LEDs should not be used. */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
++
+     /*Configure the TX and RX AES jobs, the TX job is used to encrypt the Response message,
+      * the RX job is used to decrypt the Poll message */
+     aes_job_rx.mode = AES_Decrypt;                               /* Mode is set to decryption */
+@@ -218,14 +226,14 @@
+                 switch (status)
+                 {
+                 case AES_RES_ERROR_LENGTH:
+-                    test_run_info((unsigned char *)"AES length error");
+-                    break;
++                    test_run_info((unsigned char *)"AES length error, skip this frame");
++                    continue;
+                 case AES_RES_ERROR:
+-                    test_run_info((unsigned char *)"ERROR AES");
+-                    break;
++                    test_run_info((unsigned char *)"ERROR AES, skip this frame");
++                    continue;
+                 case AES_RES_ERROR_FRAME:
+-                    test_run_info((unsigned char *)"Error Frame");
+-                    break;
++                    test_run_info((unsigned char *)"Error Frame, skip this frame");
++                    continue;;
+                 case AES_RES_ERROR_IGNORE_FRAME:
+                     continue; // Got frame with wrong destination address
+                 }
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_07a_ack_data_tx/ack_data_tx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_07a_ack_data_tx/ack_data_tx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_07a_ack_data_tx/ack_data_tx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_07a_ack_data_tx/ack_data_tx.c	2024-11-02 05:51:03.000000000 +0100
+@@ -15,9 +15,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -149,6 +147,14 @@
+     /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+ 
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever transmitting data. */
+     while (1)
+     {
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_07a_ack_data_tx: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_07b_ack_data_rx/ack_data_rx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_07b_ack_data_rx/ack_data_rx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_07b_ack_data_rx/ack_data_rx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_07b_ack_data_rx/ack_data_rx.c	2024-11-02 05:51:03.000000000 +0100
+@@ -15,9 +15,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -115,6 +113,15 @@
+ 
+     /* can enable TX/RX states output on GPIOs 5 and 6 to help debug */
+     dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
++
++    #if defined (CONFIG_BOARD_LEAPS_LC14)
++    /* Setting RF port 1 only */
++    dwt_configure_rf_port(DWT_RF_PORT_MANUAL_1);
++    #else
++    /* Disable manual, switch to default, by default 2 anten are used */
++    dwt_configure_rf_port(DWT_RF_PORT_AUTO_1_2);
++    #endif
++
+     /* Loop forever receiving frames. */
+     /* Clear previous received data flag */
+     dwt_writesysstatuslo(DWT_INT_RXFCG_BIT_MASK);
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_07b_ack_data_rx: CMakeLists.txt
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_11a_spi_crc: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_11a_spi_crc/spi_crc.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_11a_spi_crc/spi_crc.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_11a_spi_crc/spi_crc.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_11a_spi_crc/spi_crc.c	2024-11-02 15:59:04.000000000 +0100
+@@ -13,9 +13,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include "deca_private.h"
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_13a_gpio: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_13a_gpio/gpio_example.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_13a_gpio/gpio_example.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_13a_gpio/gpio_example.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_13a_gpio/gpio_example.c	2024-11-02 05:51:03.000000000 +0100
+@@ -12,9 +12,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ 
+ #if defined(TEST_GPIO)
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_14_otp_write: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_14_otp_write/otp_write.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_14_otp_write/otp_write.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_14_otp_write/otp_write.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_14_otp_write/otp_write.c	2024-11-02 05:51:03.000000000 +0100
+@@ -12,7 +12,6 @@
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <stdio.h>
+ 
+ #if defined(TEST_OTP_WRITE)
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_15_le_pend: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_15_le_pend/le_pend_rx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_15_le_pend/le_pend_rx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_15_le_pend/le_pend_rx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_15_le_pend/le_pend_rx.c	2024-11-02 05:51:03.000000000 +0100
+@@ -19,9 +19,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <string.h>
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_15_le_pend/le_pend_tx.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_15_le_pend/le_pend_tx.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_15_le_pend/le_pend_tx.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_15_le_pend/le_pend_tx.c	2024-11-02 15:59:14.000000000 +0100
+@@ -22,9 +22,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_16_pll_cal: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_16_pll_cal/pll_cal.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_16_pll_cal/pll_cal.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_16_pll_cal/pll_cal.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_16_pll_cal/pll_cal.c	2024-11-02 15:59:20.000000000 +0100
+@@ -17,10 +17,9 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+ #include <math.h>
+-#include <port.h>
++
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_17_bw_cal/bandwidth_calibration.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_17_bw_cal/bandwidth_calibration.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_17_bw_cal/bandwidth_calibration.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_17_bw_cal/bandwidth_calibration.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdio.h>
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_17_bw_cal: CMakeLists.txt
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_18_timer: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_18_timer/timer_example.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_18_timer/timer_example.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_18_timer/timer_example.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_18_timer/timer_example.c	2024-11-02 15:59:28.000000000 +0100
+@@ -14,9 +14,8 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
++
+ 
+ #if defined(TEST_TIMER)
+ 
+@@ -120,6 +119,7 @@
+ 
+             timer_expired = 0;
+         }
++        Sleep(1);
+     }
+ }
+ 
+@@ -138,6 +138,8 @@
+     timer_expired = 1; // timer expired
+ 
+     timer_count++; // timer count
++    /* Re-Enable wanted interrupts. */ 
++    dwt_setinterrupt(DWT_INT_TIMER0_BIT_MASK, 0, DWT_ENABLE_INT);
+ }
+ 
+ #endif
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_19_tx_power_adjustment: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_19_tx_power_adjustment/tx_power_adjustment_example.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_19_tx_power_adjustment/tx_power_adjustment_example.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_19_tx_power_adjustment/tx_power_adjustment_example.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_19_tx_power_adjustment/tx_power_adjustment_example.c	2024-11-02 05:51:03.000000000 +0100
+@@ -21,9 +21,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -75,7 +73,7 @@
+ /**
+  * Application entry point.
+  */
+-void tx_power_adjustment_example(void)
++int tx_power_adjustment_example(void)
+ {
+     int err;
+     uint32_t ref_tx_power = 0x36363636; // Base TxPower setting. See NOTE 6 below.
+@@ -141,7 +139,7 @@
+ 
+     Sleep(1000);
+     memset(str, 0, STR_SIZE);
+-    snprintf((char *)str, STR_SIZE, "Reference_tx_power:%lx; Boost:%d; Adjusted_tx_power:%lx\r\n", ref_tx_power, boost, adj_tx_power);
++    snprintf((char *)str, STR_SIZE, "Reference_tx_power:%x; Boost:%d; Adjusted_tx_power:%x\r\n", ref_tx_power, boost, adj_tx_power);
+     test_run_info(str);
+     Sleep(1000);
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_20_simple_aes: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_20_simple_aes/simple_aes.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_20_simple_aes/simple_aes.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_20_simple_aes/simple_aes.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_20_simple_aes/simple_aes.c	2024-11-02 15:59:41.000000000 +0100
+@@ -29,9 +29,7 @@
+ 
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_21_linear_tx_power: CMakeLists.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_21_linear_tx_power/linear_tx_power_example.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_21_linear_tx_power/linear_tx_power_example.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/ex_21_linear_tx_power/linear_tx_power_example.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/ex_21_linear_tx_power/linear_tx_power_example.c	2024-11-02 05:51:03.000000000 +0100
+@@ -11,9 +11,7 @@
+  */
+ #include "deca_probe_interface.h"
+ #include <deca_device_api.h>
+-#include <deca_spi.h>
+ #include <example_selection.h>
+-#include <port.h>
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ 
+@@ -65,9 +63,9 @@
+ /**
+  * Application entry point.
+  */
+-void linear_tx_power_example(void)
++int linear_tx_power_example(void)
+ {
+-    int err;
++    // int err;
+     dwt_txconfig_t tx_config;
+ 
+     unsigned char str[STR_SIZE];
+@@ -122,7 +120,7 @@
+ 
+         Sleep(1000);
+         memset(str, 0, STR_SIZE);
+-        snprintf((char *)str, STR_SIZE, "Input Index:%d; Output Index:%d; Tx_power:%lx Pll_common %x\r\n", power_indexes.input[0],
++        snprintf((char *)str, STR_SIZE, "Input Index:%d; Output Index:%d; Tx_power:%x Pll_common %x\r\n", power_indexes.input[0],
+                         power_indexes.output[0],
+                         linear_results.tx_frame_cfg.tx_power_setting,
+                         linear_results.tx_frame_cfg.pll_cfg);
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples: examples_info
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples: license.txt
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/shared_data/shared_defines.h QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/shared_data/shared_defines.h
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/shared_data/shared_defines.h	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/shared_data/shared_defines.h	2024-11-02 05:51:03.000000000 +0100
+@@ -21,6 +21,16 @@
+ #include <main.h>
+ #endif // STM32F429xx
+ 
++/// Definition for false
++#ifndef FALSE
++#define FALSE               0
++#endif
++
++/// Definition for true
++#ifndef TRUE
++#define TRUE                1
++#endif
++
+ #define SPEED_OF_LIGHT   (299702547)
+ #define FRAME_LEN_MAX    (127)
+ #define FRAME_LEN_MAX_EX (1023)
+diff --strip-trailing-cr -ur QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/shared_data/shared_functions.c QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/shared_data/shared_functions.c
+--- QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples/shared_data/shared_functions.c	2024-06-19 11:25:20.000000000 +0200
++++ QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src/examples/shared_data/shared_functions.c	2024-11-02 05:51:03.000000000 +0100
+@@ -12,7 +12,7 @@
+ #include <config_options.h>
+ #include <deca_device_api.h>
+ #include <deca_types.h>
+-#include <port.h>
++
+ #include <shared_defines.h>
+ #include <shared_functions.h>
+ #include <stdlib.h>
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src/examples: test
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1/API/Src: example_selection.h
+Only in QM33XX_DW3XXX_LEAPS_MODIFIED/API/Src: probe_interface.c
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1: Changelog.md
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1: .gitlab-ci.yml
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1: LICENSES
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1: README.md
+Only in QM33XX_DW3XXX_RELEASE_PACKAGE_R13_1: .vscode
