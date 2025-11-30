@@ -27,7 +27,7 @@ target_sources(app PRIVATE
     common/uwb_config.c
     common/position_calc.c
     common/battery_mgmt.c
-    common/mesh_routing.c
+    common/ble_mesh.c
     common/uwb_utils.c
 )
 

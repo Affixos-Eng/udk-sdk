@@ -220,7 +220,7 @@ config UWB_IPS_MAX_ANCHORS
     default 4
 
 config UWB_IPS_BEACON_INTERVAL_MS
-    int "Anchor beacon interval in milliseconds"
+    int "Anchor BLE beacon interval in milliseconds"
     range 1000 30000
     default 10000
 
@@ -232,6 +232,15 @@ config UWB_IPS_CHANNEL
 config UWB_IPS_BATTERY_MONITOR
     bool "Enable battery monitoring"
     default n
+
+# BLE Mesh is always enabled for UWB IPS
+config UWB_IPS_BLE_MESH
+    bool "Enable BLE advertisement mesh for position data"
+    default y
+    depends on UWB_IPS_TAG || UWB_IPS_ANCHOR
+    select BT
+    select BT_PERIPHERAL
+    select BT_OBSERVER
 
 endmenu
 
