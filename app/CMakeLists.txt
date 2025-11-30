@@ -28,6 +28,9 @@ elseif(CONFIG_TEST_MOTOR)
 elseif(CONFIG_TEST_HW_INTERFACE_COMBINATION)
   # combning some hw interfaces
   add_subdirectory(005_ex_hwinterfaces_combination) 
+elseif(CONFIG_UWB_IPS_TAG OR CONFIG_UWB_IPS_ANCHOR)
+  # UWB Indoor Positioning System
+  add_subdirectory(007_uwb_ips)
 else()# otherwise is test UWB
   add_subdirectory(006_ex_uwb)
 endif()

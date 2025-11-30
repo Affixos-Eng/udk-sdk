@@ -191,7 +191,47 @@ config TEST_SIMPLE_AES
 config TEST_LINEAR_TX_POWER
     bool "Run exmaple: (ex_21_linear_tx_power/linear_tx_power_example.c) TThis example demonstrates how the dwt_calculate_linear_tx_setting API allows to calculate tx power setting with a linear output power behavior.. Refer the header of each example source for more detail."
 
+config UWB_IPS_TAG
+    bool "UWB Indoor Positioning System - TAG mode (initiates TWR ranging and calculates own position)"
+
+config UWB_IPS_ANCHOR
+    bool "UWB Indoor Positioning System - ANCHOR mode (responds to TWR and forwards position data)"
+
 endchoice
+
+config UWB_IPS_GATEWAY
+    bool "Enable gateway functionality (UART output)"
+    depends on UWB_IPS_ANCHOR
+    default n
+
+config UWB_IPS_DEVICE_ID
+    int "Device ID (Tags: 1-1000, Anchors: 1001-2000)"
+    range 1 65534
+    default 1
+
+config UWB_IPS_UPDATE_RATE_HZ
+    int "Position update rate in Hz (Tags only)"
+    range 1 10
+    default 2
+
+config UWB_IPS_MAX_ANCHORS
+    int "Maximum number of anchors to range with"
+    range 3 8
+    default 4
+
+config UWB_IPS_BEACON_INTERVAL_MS
+    int "Anchor beacon interval in milliseconds"
+    range 1000 30000
+    default 10000
+
+config UWB_IPS_CHANNEL
+    int "UWB Channel (5 or 9)"
+    range 5 9
+    default 5
+
+config UWB_IPS_BATTERY_MONITOR
+    bool "Enable battery monitoring"
+    default n
 
 endmenu
 
