@@ -196,6 +196,7 @@ int test_app(void)
     LOG_INF("Device ID: %d (0x%04X)", 
             CONFIG_UWB_IPS_DEVICE_ID, 
             CONFIG_UWB_IPS_DEVICE_ID);
+    LOG_INF("Network ID: %d", CONFIG_UWB_IPS_NETWORK_ID);
     LOG_INF("Update rate: %d Hz", CONFIG_UWB_IPS_UPDATE_RATE_HZ);
     LOG_INF("Mesh: BLE Advertisement-based");
     LOG_INF("==============================================");
@@ -203,7 +204,7 @@ int test_app(void)
     int ret;
     
     /* Initialize BLE mesh (for beacons and position broadcast) */
-    ret = ble_mesh_init(CONFIG_UWB_IPS_DEVICE_ID, false);
+    ret = ble_mesh_init(CONFIG_UWB_IPS_DEVICE_ID, CONFIG_UWB_IPS_NETWORK_ID, false);
     if (ret != 0) {
         LOG_ERR("BLE mesh init failed: %d", ret);
         return ret;

@@ -3,11 +3,14 @@
  * @brief UWB IPS Anchor Main Application
  * 
  * Anchors respond to UWB TWR ranging requests from tags and relay
- * position data through BLE mesh to the gateway.
+ * position data through BLE mesh. If UART is connected to a host
+ * (e.g., Raspberry Pi), the anchor automatically becomes a gateway
+ * and outputs position data via UART.
  * 
  * Architecture:
  * - UWB: Used ONLY for TWR ranging (responding to tags)
  * - BLE: Used for beacons and position data forwarding
+ * - UART: Gateway output (auto-detected)
  */
 
 #include "../common/uwb_ips.h"
@@ -44,16 +47,28 @@ static bool running = false;
 /* Anchor's known position (configured or stored) */
 static position_3d_t anchor_position = {0};
 
-/* Gateway UART */
-#if CONFIG_UWB_IPS_GATEWAY
+/* Gateway detection - if UART is available, we become a gateway */
+static bool is_gateway = false;
 static const struct device *uart_dev = NULL;
-#endif
 
 /*============================================================================
  * Gateway UART Output
  *============================================================================*/
 
-#if CONFIG_UWB_IPS_GATEWAY
+static int gateway_uart_init(void)
+{
+    uart_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+    
+    if (!device_is_ready(uart_dev)) {
+        LOG_WRN("UART device not ready - not acting as gateway");
+        uart_dev = NULL;
+        return -ENODEV;
+    }
+    
+    LOG_INF("UART available - this anchor will act as GATEWAY");
+    return 0;
+}
+
 static void gateway_output_position(uint16_t tag_id,
                                     const position_3d_t *position,
                                     uint8_t battery_pct)
@@ -65,7 +80,8 @@ static void gateway_output_position(uint16_t tag_id,
     /* Output JSON format */
     char buf[128];
     int len = snprintf(buf, sizeof(buf),
-                       "{\"tag\":%u,\"x\":%d,\"y\":%d,\"z\":%d,\"q\":%u,\"bat\":%u,\"ts\":%u}\n",
+                       "{\"net\":%u,\"tag\":%u,\"x\":%d,\"y\":%d,\"z\":%d,\"q\":%u,\"bat\":%u,\"ts\":%u}\n",
+                       CONFIG_UWB_IPS_NETWORK_ID,
                        tag_id,
                        position->x_mm / 10,  /* Convert to cm */
                        position->y_mm / 10,
@@ -78,23 +94,10 @@ static void gateway_output_position(uint16_t tag_id,
         uart_poll_out(uart_dev, buf[i]);
     }
     
-    LOG_INF("Gateway TX: tag=%u pos=(%d,%d,%d)cm",
-            tag_id, position->x_mm / 10, position->y_mm / 10, position->z_mm / 10);
+    LOG_INF("Gateway TX: net=%u tag=%u pos=(%d,%d,%d)cm",
+            CONFIG_UWB_IPS_NETWORK_ID, tag_id,
+            position->x_mm / 10, position->y_mm / 10, position->z_mm / 10);
 }
-
-static int gateway_uart_init(void)
-{
-    uart_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-    
-    if (!device_is_ready(uart_dev)) {
-        LOG_ERR("UART device not ready");
-        return -ENODEV;
-    }
-    
-    LOG_INF("Gateway UART initialized");
-    return 0;
-}
-#endif
 
 /*============================================================================
  * BLE Position Callback (Gateway Only)
@@ -107,9 +110,9 @@ static void on_position_received(uint16_t tag_id,
     LOG_INF("Position from tag 0x%04X: (%d, %d, %d) mm",
             tag_id, position->x_mm, position->y_mm, position->z_mm);
     
-#if CONFIG_UWB_IPS_GATEWAY
-    gateway_output_position(tag_id, position, battery_pct);
-#endif
+    if (is_gateway) {
+        gateway_output_position(tag_id, position, battery_pct);
+    }
 }
 
 /*============================================================================
@@ -124,11 +127,9 @@ static void beacon_thread_entry(void *p1, void *p2, void *p3)
     
     LOG_INF("BLE beacon thread started");
     
-    bool is_gw = IS_ENABLED(CONFIG_UWB_IPS_GATEWAY);
-    
     while (running) {
         /* Send BLE beacon */
-        ble_mesh_send_beacon(&anchor_position, is_gw);
+        ble_mesh_send_beacon(&anchor_position, is_gateway);
         
         k_msleep(BEACON_INTERVAL_MS);
     }
@@ -177,17 +178,22 @@ int test_app(void)
     LOG_INF("Device ID: %d (0x%04X)", 
             CONFIG_UWB_IPS_DEVICE_ID, 
             CONFIG_UWB_IPS_DEVICE_ID);
-#if CONFIG_UWB_IPS_GATEWAY
-    LOG_INF("Mode: GATEWAY");
-#else
-    LOG_INF("Mode: Anchor (relay)");
-#endif
+    LOG_INF("Network ID: %d", CONFIG_UWB_IPS_NETWORK_ID);
     LOG_INF("Beacon interval: %d ms", BEACON_INTERVAL_MS);
     LOG_INF("Mesh: BLE Advertisement-based");
     LOG_INF("==============================================");
     
     int ret;
-    bool is_gateway = IS_ENABLED(CONFIG_UWB_IPS_GATEWAY);
+    
+    /* Try to initialize UART - if successful, we become a gateway */
+    ret = gateway_uart_init();
+    is_gateway = (ret == 0);
+    
+    if (is_gateway) {
+        LOG_INF("Mode: GATEWAY (UART connected)");
+    } else {
+        LOG_INF("Mode: Anchor (relay only)");
+    }
     
     /* TODO: Load anchor position from config/storage */
     /* For now, use device ID to offset position for testing */
@@ -199,17 +205,8 @@ int test_app(void)
     LOG_INF("Anchor position: (%d, %d, %d) mm",
             anchor_position.x_mm, anchor_position.y_mm, anchor_position.z_mm);
     
-#if CONFIG_UWB_IPS_GATEWAY
-    /* Initialize gateway UART */
-    ret = gateway_uart_init();
-    if (ret != 0) {
-        LOG_ERR("Gateway UART init failed: %d", ret);
-        return ret;
-    }
-#endif
-    
     /* Initialize BLE mesh */
-    ret = ble_mesh_init(CONFIG_UWB_IPS_DEVICE_ID, is_gateway);
+    ret = ble_mesh_init(CONFIG_UWB_IPS_DEVICE_ID, CONFIG_UWB_IPS_NETWORK_ID, is_gateway);
     if (ret != 0) {
         LOG_ERR("BLE mesh init failed: %d", ret);
         return ret;
@@ -257,7 +254,10 @@ int test_app(void)
     while (1) {
         k_msleep(30000);
         
-        LOG_INF("Anchor running, uptime: %u s", k_uptime_get_32() / 1000);
+        LOG_INF("Anchor running: net=%u, gateway=%s, uptime=%u s",
+                CONFIG_UWB_IPS_NETWORK_ID,
+                is_gateway ? "yes" : "no",
+                k_uptime_get_32() / 1000);
     }
     
     return 0;

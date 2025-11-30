@@ -28,6 +28,11 @@
 #define BLE_MESH_SCAN_INTERVAL      100     /* Scan interval (ms) */
 #define BLE_MESH_SCAN_WINDOW        50      /* Scan window (ms) */
 
+/* Network ID - allows multiple networks to coexist without mixing traffic */
+#ifndef CONFIG_UWB_IPS_NETWORK_ID
+#define CONFIG_UWB_IPS_NETWORK_ID   0x01    /* Default network ID */
+#endif
+
 /*============================================================================
  * Message Types
  *============================================================================*/
@@ -41,10 +46,13 @@
  *============================================================================*/
 
 /**
- * @brief Tag position message (13 bytes)
+ * @brief Tag position message (14 bytes)
+ * 
+ * Network ID is included to allow multiple networks to coexist.
  */
 typedef struct __attribute__((packed)) {
     uint8_t msg_id;         /**< BLE_MSG_TAG_POSITION (0x01) */
+    uint8_t network_id;     /**< Network ID for filtering */
     uint8_t ttl;            /**< Time-to-live (hops remaining) */
     uint16_t tag_id;        /**< Source tag ID */
     uint8_t seq_num;        /**< Sequence number (0-255) */
@@ -56,10 +64,13 @@ typedef struct __attribute__((packed)) {
 } ble_tag_position_t;
 
 /**
- * @brief Anchor beacon message (12 bytes)
+ * @brief Anchor beacon message (13 bytes)
+ * 
+ * Network ID is included to allow multiple networks to coexist.
  */
 typedef struct __attribute__((packed)) {
     uint8_t msg_id;         /**< BLE_MSG_ANCHOR_BEACON (0x02) */
+    uint8_t network_id;     /**< Network ID for filtering */
     uint8_t ttl;            /**< Always 1 (no rebroadcast) */
     uint16_t anchor_id;     /**< Anchor device ID */
     int16_t x_cm;           /**< Known X position */
@@ -96,10 +107,11 @@ typedef void (*ble_mesh_beacon_cb_t)(const anchor_info_t *anchor);
 /**
  * @brief Initialize BLE mesh
  * @param device_id This device's ID
+ * @param network_id Network ID for multi-network filtering (1-255)
  * @param is_gateway True if this is the gateway anchor
  * @return 0 on success, negative error code on failure
  */
-int ble_mesh_init(uint16_t device_id, bool is_gateway);
+int ble_mesh_init(uint16_t device_id, uint8_t network_id, bool is_gateway);
 
 /**
  * @brief Start BLE mesh operation
@@ -147,6 +159,12 @@ void ble_mesh_set_beacon_callback(ble_mesh_beacon_cb_t callback);
  * @return true if running
  */
 bool ble_mesh_is_running(void);
+
+/**
+ * @brief Get current network ID
+ * @return Network ID (1-255)
+ */
+uint8_t ble_mesh_get_network_id(void);
 
 #endif /* BLE_MESH_H */
 

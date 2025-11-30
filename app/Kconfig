@@ -195,14 +195,18 @@ config UWB_IPS_TAG
     bool "UWB Indoor Positioning System - TAG mode (initiates TWR ranging and calculates own position)"
 
 config UWB_IPS_ANCHOR
-    bool "UWB Indoor Positioning System - ANCHOR mode (responds to TWR and forwards position data)"
+    bool "UWB Indoor Positioning System - ANCHOR mode (responds to TWR and forwards position data via BLE mesh). Anchor becomes a gateway automatically when UART is connected to host."
 
 endchoice
 
-config UWB_IPS_GATEWAY
-    bool "Enable gateway functionality (UART output)"
-    depends on UWB_IPS_ANCHOR
-    default n
+config UWB_IPS_NETWORK_ID
+    int "Network ID (1-255) - allows multiple networks to coexist without mixing traffic"
+    range 1 255
+    default 1
+    help
+      Set the same network ID for all devices (tags and anchors) that should
+      communicate with each other. Different networks can operate in the same
+      area without interference by using different network IDs.
 
 config UWB_IPS_DEVICE_ID
     int "Device ID (Tags: 1-1000, Anchors: 1001-2000)"
