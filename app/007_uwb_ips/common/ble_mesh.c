@@ -16,8 +16,7 @@ LOG_MODULE_REGISTER(ble_mesh, LOG_LEVEL_INF);
  * Configuration
  *============================================================================*/
 
-#define ADV_DATA_MAX_LEN    24
-#define MANUF_DATA_OFFSET   2   /* Skip length and type bytes */
+#define MANUF_DATA_MAX_LEN  17  /* 2 (CID) + 15 (payload) */
 
 /*============================================================================
  * Static Variables
@@ -43,9 +42,6 @@ typedef struct {
 static duplicate_entry_t duplicate_cache[BLE_MESH_DUPLICATE_CACHE];
 static K_MUTEX_DEFINE(cache_mutex);
 
-/* Advertising data buffer */
-static uint8_t adv_data_buf[ADV_DATA_MAX_LEN];
-
 /* Advertising parameters */
 static struct bt_le_adv_param adv_param = BT_LE_ADV_PARAM_INIT(
     BT_LE_ADV_OPT_USE_IDENTITY,
@@ -61,6 +57,54 @@ static struct bt_le_scan_param scan_param = {
     .interval = BT_GAP_SCAN_FAST_INTERVAL,  /* 100ms */
     .window = BT_GAP_SCAN_FAST_WINDOW,      /* 50ms */
 };
+
+/* Reusable advertising data buffer */
+static uint8_t manuf_data_buf[MANUF_DATA_MAX_LEN];
+
+/*============================================================================
+ * Helper: Build Manufacturer Data
+ *============================================================================*/
+
+static void build_position_manuf_data(uint8_t *buf, uint8_t ttl, uint16_t tag_id,
+                                      uint8_t seq_num, int16_t x_cm, int16_t y_cm,
+                                      int16_t z_cm, uint8_t quality, uint8_t battery_pct)
+{
+    buf[0] = BLE_MESH_COMPANY_ID & 0xFF;
+    buf[1] = (BLE_MESH_COMPANY_ID >> 8) & 0xFF;
+    buf[2] = BLE_MSG_TAG_POSITION;
+    buf[3] = ttl;
+    buf[4] = tag_id & 0xFF;
+    buf[5] = (tag_id >> 8) & 0xFF;
+    buf[6] = seq_num;
+    buf[7] = x_cm & 0xFF;
+    buf[8] = (x_cm >> 8) & 0xFF;
+    buf[9] = y_cm & 0xFF;
+    buf[10] = (y_cm >> 8) & 0xFF;
+    buf[11] = z_cm & 0xFF;
+    buf[12] = (z_cm >> 8) & 0xFF;
+    buf[13] = quality;
+    buf[14] = battery_pct;
+}
+
+static void build_beacon_manuf_data(uint8_t *buf, uint16_t anchor_id,
+                                    int16_t x_cm, int16_t y_cm, int16_t z_cm,
+                                    bool is_gateway)
+{
+    buf[0] = BLE_MESH_COMPANY_ID & 0xFF;
+    buf[1] = (BLE_MESH_COMPANY_ID >> 8) & 0xFF;
+    buf[2] = BLE_MSG_ANCHOR_BEACON;
+    buf[3] = 1;  /* TTL = 1, no relay */
+    buf[4] = anchor_id & 0xFF;
+    buf[5] = (anchor_id >> 8) & 0xFF;
+    buf[6] = x_cm & 0xFF;
+    buf[7] = (x_cm >> 8) & 0xFF;
+    buf[8] = y_cm & 0xFF;
+    buf[9] = (y_cm >> 8) & 0xFF;
+    buf[10] = z_cm & 0xFF;
+    buf[11] = (z_cm >> 8) & 0xFF;
+    buf[12] = is_gateway ? 1 : 0;
+    buf[13] = 0;  /* flags */
+}
 
 /*============================================================================
  * Duplicate Detection
@@ -112,6 +156,29 @@ static bool is_duplicate(uint16_t tag_id, uint8_t seq_num)
 }
 
 /*============================================================================
+ * Internal: Send Advertisement
+ *============================================================================*/
+
+static int send_advert(const uint8_t *manuf_data, uint8_t len, uint32_t duration_ms)
+{
+    struct bt_data ad[] = {
+        BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR),
+        BT_DATA(BT_DATA_MANUFACTURER_DATA, manuf_data, len)
+    };
+    
+    int err = bt_le_adv_start(&adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
+    if (err && err != -EALREADY) {
+        LOG_ERR("Advert start failed: %d", err);
+        return err;
+    }
+    
+    k_msleep(duration_ms);
+    bt_le_adv_stop();
+    
+    return 0;
+}
+
+/*============================================================================
  * BLE Scan Callback
  *============================================================================*/
 
@@ -142,13 +209,13 @@ static void scan_recv_cb(const bt_addr_le_t *addr, int8_t rssi,
             uint8_t ttl = net_buf_simple_pull_u8(buf);
             len -= 2;
             
-            if (msg_id == BLE_MSG_TAG_POSITION && len >= sizeof(ble_tag_position_t) - 2) {
+            if (msg_id == BLE_MSG_TAG_POSITION && len >= 11) {
                 /* Parse position message */
                 uint16_t tag_id = net_buf_simple_pull_le16(buf);
                 uint8_t seq_num = net_buf_simple_pull_u8(buf);
-                int16_t x_cm = net_buf_simple_pull_le16(buf);
-                int16_t y_cm = net_buf_simple_pull_le16(buf);
-                int16_t z_cm = net_buf_simple_pull_le16(buf);
+                int16_t x_cm = (int16_t)net_buf_simple_pull_le16(buf);
+                int16_t y_cm = (int16_t)net_buf_simple_pull_le16(buf);
+                int16_t z_cm = (int16_t)net_buf_simple_pull_le16(buf);
                 uint8_t quality = net_buf_simple_pull_u8(buf);
                 uint8_t battery_pct = net_buf_simple_pull_u8(buf);
                 
@@ -175,54 +242,32 @@ static void scan_recv_cb(const bt_addr_le_t *addr, int8_t rssi,
                     }
                 } else if (ttl > 1) {
                     /* Relay: forward with decremented TTL */
-                    ble_tag_position_t fwd_msg = {
-                        .msg_id = BLE_MSG_TAG_POSITION,
-                        .ttl = ttl - 1,
-                        .tag_id = tag_id,
-                        .seq_num = seq_num,
-                        .x_cm = x_cm,
-                        .y_cm = y_cm,
-                        .z_cm = z_cm,
-                        .quality = quality,
-                        .battery_pct = battery_pct
-                    };
+                    uint8_t new_ttl = ttl - 1;
                     
                     /* Small delay to avoid collision */
                     k_msleep(10 + (my_device_id % 20));
                     
-                    /* Rebroadcast */
-                    struct bt_data ad[] = {
-                        BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR),
-                        BT_DATA(BT_DATA_MANUFACTURER_DATA, 
-                               (uint8_t[]){
-                                   BLE_MESH_COMPANY_ID & 0xFF,
-                                   (BLE_MESH_COMPANY_ID >> 8) & 0xFF,
-                                   fwd_msg.msg_id, fwd_msg.ttl,
-                                   fwd_msg.tag_id & 0xFF, (fwd_msg.tag_id >> 8) & 0xFF,
-                                   fwd_msg.seq_num,
-                                   fwd_msg.x_cm & 0xFF, (fwd_msg.x_cm >> 8) & 0xFF,
-                                   fwd_msg.y_cm & 0xFF, (fwd_msg.y_cm >> 8) & 0xFF,
-                                   fwd_msg.z_cm & 0xFF, (fwd_msg.z_cm >> 8) & 0xFF,
-                                   fwd_msg.quality, fwd_msg.battery_pct
-                               }, 15)
-                    };
+                    /* Build and send forward advertisement */
+                    build_position_manuf_data(manuf_data_buf, new_ttl, tag_id,
+                                              seq_num, x_cm, y_cm, z_cm,
+                                              quality, battery_pct);
                     
-                    bt_le_adv_stop();
-                    bt_le_adv_start(&adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
-                    k_msleep(50);  /* Send a few advertisements */
-                    bt_le_adv_stop();
+                    bt_le_scan_stop();
+                    send_advert(manuf_data_buf, 15, 50);
+                    bt_le_scan_start(&scan_param, scan_recv_cb);
                     
-                    LOG_DBG("Forwarded position, TTL now %u", ttl - 1);
+                    LOG_DBG("Forwarded position, TTL now %u", new_ttl);
                 }
+                return;
                 
-            } else if (msg_id == BLE_MSG_ANCHOR_BEACON && len >= sizeof(ble_anchor_beacon_t) - 2) {
+            } else if (msg_id == BLE_MSG_ANCHOR_BEACON && len >= 10) {
                 /* Parse beacon message */
                 uint16_t anchor_id = net_buf_simple_pull_le16(buf);
-                int16_t x_cm = net_buf_simple_pull_le16(buf);
-                int16_t y_cm = net_buf_simple_pull_le16(buf);
-                int16_t z_cm = net_buf_simple_pull_le16(buf);
+                int16_t x_cm = (int16_t)net_buf_simple_pull_le16(buf);
+                int16_t y_cm = (int16_t)net_buf_simple_pull_le16(buf);
+                int16_t z_cm = (int16_t)net_buf_simple_pull_le16(buf);
                 uint8_t is_gw = net_buf_simple_pull_u8(buf);
-                uint8_t flags = net_buf_simple_pull_u8(buf);
+                /* uint8_t flags = */ net_buf_simple_pull_u8(buf);
                 
                 LOG_DBG("Beacon from anchor 0x%04X at (%d, %d, %d) cm",
                         anchor_id, x_cm, y_cm, z_cm);
@@ -237,12 +282,13 @@ static void scan_recv_cb(const bt_addr_le_t *addr, int8_t rssi,
                             .quality = 1000,
                             .timestamp_ms = k_uptime_get_32()
                         },
-                        .is_gateway = is_gw,
+                        .is_gateway = (is_gw != 0),
                         .last_rssi = rssi,
                         .last_seen_ms = k_uptime_get_32()
                     };
                     beacon_callback(&info);
                 }
+                return;
             } else {
                 net_buf_simple_pull(buf, len);
             }
@@ -309,109 +355,52 @@ int ble_mesh_stop(void)
 int ble_mesh_send_position(const position_3d_t *position,
                            const battery_status_t *battery)
 {
-    ble_tag_position_t msg = {
-        .msg_id = BLE_MSG_TAG_POSITION,
-        .ttl = BLE_MESH_MAX_TTL,
-        .tag_id = my_device_id,
-        .seq_num = tx_seq_num++,
-        .x_cm = (int16_t)(position->x_mm / 10),
-        .y_cm = (int16_t)(position->y_mm / 10),
-        .z_cm = (int16_t)(position->z_mm / 10),
-        .quality = (uint8_t)(position->quality / 10),
-        .battery_pct = battery->percentage
-    };
+    int16_t x_cm = (int16_t)(position->x_mm / 10);
+    int16_t y_cm = (int16_t)(position->y_mm / 10);
+    int16_t z_cm = (int16_t)(position->z_mm / 10);
+    uint8_t quality = (uint8_t)(position->quality / 10);
     
-    uint8_t manuf_data[] = {
-        BLE_MESH_COMPANY_ID & 0xFF,
-        (BLE_MESH_COMPANY_ID >> 8) & 0xFF,
-        msg.msg_id, msg.ttl,
-        msg.tag_id & 0xFF, (msg.tag_id >> 8) & 0xFF,
-        msg.seq_num,
-        msg.x_cm & 0xFF, (msg.x_cm >> 8) & 0xFF,
-        msg.y_cm & 0xFF, (msg.y_cm >> 8) & 0xFF,
-        msg.z_cm & 0xFF, (msg.z_cm >> 8) & 0xFF,
-        msg.quality, msg.battery_pct
-    };
-    
-    struct bt_data ad[] = {
-        BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR),
-        BT_DATA(BT_DATA_MANUFACTURER_DATA, manuf_data, sizeof(manuf_data))
-    };
+    build_position_manuf_data(manuf_data_buf, BLE_MESH_MAX_TTL, my_device_id,
+                              tx_seq_num++, x_cm, y_cm, z_cm,
+                              quality, battery->percentage);
     
     /* Stop scanning temporarily */
     bt_le_scan_stop();
     
-    /* Send multiple advertisements for reliability */
-    int err = bt_le_adv_start(&adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
-    if (err) {
-        LOG_ERR("Advertising failed: %d", err);
-        bt_le_scan_start(&scan_param, scan_recv_cb);
-        return err;
-    }
-    
-    /* Keep advertising for ~100ms (a few intervals) */
-    k_msleep(100);
-    
-    bt_le_adv_stop();
+    /* Send advertisement for ~100ms */
+    int err = send_advert(manuf_data_buf, 15, 100);
     
     /* Resume scanning */
     bt_le_scan_start(&scan_param, scan_recv_cb);
     
     LOG_DBG("Sent position: (%d, %d, %d) cm, seq=%u",
-            msg.x_cm, msg.y_cm, msg.z_cm, msg.seq_num);
+            x_cm, y_cm, z_cm, tx_seq_num - 1);
     
-    return 0;
+    return err;
 }
 
 int ble_mesh_send_beacon(const position_3d_t *anchor_pos, bool is_gateway)
 {
-    ble_anchor_beacon_t msg = {
-        .msg_id = BLE_MSG_ANCHOR_BEACON,
-        .ttl = 1,  /* Beacons are not relayed */
-        .anchor_id = my_device_id,
-        .x_cm = (int16_t)(anchor_pos->x_mm / 10),
-        .y_cm = (int16_t)(anchor_pos->y_mm / 10),
-        .z_cm = (int16_t)(anchor_pos->z_mm / 10),
-        .is_gateway = is_gateway ? 1 : 0,
-        .flags = 0
-    };
+    int16_t x_cm = (int16_t)(anchor_pos->x_mm / 10);
+    int16_t y_cm = (int16_t)(anchor_pos->y_mm / 10);
+    int16_t z_cm = (int16_t)(anchor_pos->z_mm / 10);
     
-    uint8_t manuf_data[] = {
-        BLE_MESH_COMPANY_ID & 0xFF,
-        (BLE_MESH_COMPANY_ID >> 8) & 0xFF,
-        msg.msg_id, msg.ttl,
-        msg.anchor_id & 0xFF, (msg.anchor_id >> 8) & 0xFF,
-        msg.x_cm & 0xFF, (msg.x_cm >> 8) & 0xFF,
-        msg.y_cm & 0xFF, (msg.y_cm >> 8) & 0xFF,
-        msg.z_cm & 0xFF, (msg.z_cm >> 8) & 0xFF,
-        msg.is_gateway, msg.flags
-    };
-    
-    struct bt_data ad[] = {
-        BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR),
-        BT_DATA(BT_DATA_MANUFACTURER_DATA, manuf_data, sizeof(manuf_data))
-    };
+    build_beacon_manuf_data(manuf_data_buf, my_device_id,
+                            x_cm, y_cm, z_cm, is_gateway);
     
     /* Stop scanning temporarily */
     bt_le_scan_stop();
     
-    int err = bt_le_adv_start(&adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
-    if (err) {
-        LOG_ERR("Beacon advertising failed: %d", err);
-        bt_le_scan_start(&scan_param, scan_recv_cb);
-        return err;
-    }
-    
-    k_msleep(50);
-    bt_le_adv_stop();
+    /* Send beacon */
+    int err = send_advert(manuf_data_buf, 14, 50);
     
     /* Resume scanning */
     bt_le_scan_start(&scan_param, scan_recv_cb);
     
     LOG_DBG("Sent beacon: anchor 0x%04X at (%d, %d, %d) cm",
-            msg.anchor_id, msg.x_cm, msg.y_cm, msg.z_cm);
+            my_device_id, x_cm, y_cm, z_cm);
     
-    return 0;
+    return err;
 }
 
 void ble_mesh_set_position_callback(ble_mesh_position_cb_t callback)
@@ -428,4 +417,3 @@ bool ble_mesh_is_running(void)
 {
     return mesh_running;
 }
-

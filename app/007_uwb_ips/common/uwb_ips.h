@@ -53,10 +53,8 @@
 #define MSG_TYPE_ANCHOR_BEACON      0x31
 #define MSG_TYPE_GATEWAY_DATA       0x40
 
-/* Physical constants - use SDK's definition if available */
-#ifndef SPEED_OF_LIGHT
-#define SPEED_OF_LIGHT  299702547.0  /* m/s in air */
-#endif
+/* Use SDK's SPEED_OF_LIGHT from shared_defines.h */
+#include <shared_defines.h>
 
 /*============================================================================
  * Data Types

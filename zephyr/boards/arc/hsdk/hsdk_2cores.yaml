@@ -1,0 +1,12 @@
+identifier: hsdk_2cores
+name: HS Development Kit(2 cores)
+type: mcu
+arch: arc
+toolchain:
+  - zephyr
+  - xtools
+  - arcmwdt
+testing:
+  ignore_tags:
+    - net
+    - bluetooth

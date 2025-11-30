@@ -1,6 +1,8 @@
 /**
  * @file anchor_twr.h
  * @brief Anchor TWR (Two-Way Ranging Responder) interface
+ * 
+ * Handles UWB TWR ranging only. Position forwarding is done via BLE mesh.
  */
 
 #ifndef ANCHOR_TWR_H
@@ -16,30 +18,12 @@ int anchor_twr_init(void);
 
 /**
  * @brief Run anchor responder (blocking, handles one exchange)
- * @return 0 on success, negative error code on failure
+ * 
+ * Listens for TWR poll messages and responds. Does not handle position
+ * forwarding - that's done via BLE mesh in anchor_main.c.
+ * 
+ * @return 0 on success, -ETIMEDOUT on no message, negative error otherwise
  */
 int anchor_twr_respond(void);
 
-/**
- * @brief Send anchor beacon
- * @return 0 on success
- */
-int anchor_send_beacon(void);
-
-/**
- * @brief Handle received position message from tag
- * @param rx_buffer Received message
- * @param length Message length
- */
-void anchor_handle_position(const uint8_t *rx_buffer, uint16_t length);
-
-/**
- * @brief Forward data to gateway (via mesh or UART)
- * @param data Data to forward
- * @param length Data length
- * @return 0 on success
- */
-int anchor_forward_to_gateway(const uint8_t *data, uint16_t length);
-
 #endif /* ANCHOR_TWR_H */
-

@@ -1,0 +1,12 @@
+description: ST STM32 FDCAN CAN-FD controller
+
+compatible: "st,stm32-fdcan"
+
+include: ["can-fd-controller.yaml", "pinctrl-device.yaml"]
+
+properties:
+    reg:
+      required: true
+
+    interrupts:
+      required: true

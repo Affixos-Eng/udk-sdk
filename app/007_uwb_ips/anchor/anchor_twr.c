@@ -2,7 +2,8 @@
  * @file anchor_twr.c
  * @brief Anchor TWR (DS-TWR Responder) implementation using LEAPS UDK-SDK
  * 
- * Based on ex_05b_ds_twr_resp from LEAPS SDK examples.
+ * Handles UWB TWR ranging only. Position forwarding is done via BLE mesh
+ * (see ble_mesh.c).
  */
 
 #include "anchor_twr.h"
@@ -35,9 +36,6 @@ static uint8_t rx_poll_msg[] = { 0x41, 0x88, 0, 0xCA, 0xDE, 0, 0, 0, 0, MSG_TYPE
 static uint8_t tx_resp_msg[] = { 0x41, 0x88, 0, 0xCA, 0xDE, 0, 0, 0, 0, MSG_TYPE_TWR_RESPONSE, 0x02, 0, 0, 0, 0 };
 static uint8_t rx_final_msg[] = { 0x41, 0x88, 0, 0xCA, 0xDE, 0, 0, 0, 0, MSG_TYPE_TWR_FINAL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/* Beacon message */
-static uint8_t tx_beacon_msg[sizeof(anchor_beacon_msg_t)];
-
 /* RX buffer */
 #define RX_BUF_LEN 32
 static uint8_t rx_buffer[RX_BUF_LEN];
@@ -49,7 +47,6 @@ static uint8_t frame_seq_nb = 0;
 static uint16_t my_address = 0;
 static position_3d_t my_position = {0};
 static bool is_gateway = false;
-static uint8_t hop_to_gateway = 0;
 
 /*============================================================================
  * Helper Functions - use SDK's functions
@@ -63,17 +60,14 @@ static uint8_t hop_to_gateway = 0;
 
 int anchor_twr_init(void)
 {
-    LOG_INF("Initializing Anchor TWR...");
+    LOG_INF("Initializing Anchor TWR (UWB ranging only)...");
     
     /* Get device configuration */
     my_address = CONFIG_UWB_IPS_DEVICE_ID;
     is_gateway = IS_ENABLED(CONFIG_UWB_IPS_GATEWAY);
     
     if (is_gateway) {
-        hop_to_gateway = 0;
         LOG_INF("This anchor is the GATEWAY");
-    } else {
-        hop_to_gateway = 255;  /* Unknown until we hear from gateway */
     }
     
     /* Set address in message templates */
@@ -94,12 +88,12 @@ int anchor_twr_respond(void)
     uint32_t status_reg;
     uint64_t poll_rx_ts, resp_tx_ts, final_rx_ts;
     
-    /* Enable RX with no timeout (wait indefinitely for poll) */
+    /* Enable RX with timeout (don't block forever) */
     dwt_setpreambledetecttimeout(0);
-    dwt_setrxtimeout(0);
+    dwt_setrxtimeout(5000);  /* 5ms timeout */
     dwt_rxenable(DWT_START_RX_IMMEDIATE);
     
-    /* Wait for poll message or other frame */
+    /* Wait for poll message or timeout */
     waitforsysstatus(&status_reg, NULL, 
                      (DWT_INT_RXFCG_BIT_MASK | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR), 0);
     
@@ -126,27 +120,9 @@ int anchor_twr_respond(void)
     
     uint8_t msg_type = rx_buffer[9];
     
-    /* Handle position message from tag */
-    if (msg_type == MSG_TYPE_TAG_POSITION) {
-        anchor_handle_position(rx_buffer, frame_len);
-        return 0;
-    }
-    
-    /* Handle routing update from other anchor */
-    if (msg_type == MSG_TYPE_ANCHOR_BEACON) {
-        /* Process beacon for routing table */
-        const anchor_beacon_msg_t *beacon = (const anchor_beacon_msg_t *)rx_buffer;
-        if (beacon->is_gateway && !is_gateway) {
-            uint16_t gateway_id = unpack_addr(beacon->src_addr);
-            mesh_update_route(gateway_id, gateway_id, 0, 0);
-            hop_to_gateway = 1;
-        }
-        return 0;
-    }
-    
-    /* Check if it's a TWR poll for us */
+    /* Only handle TWR poll messages - position forwarding is via BLE now */
     if (msg_type != MSG_TYPE_TWR_POLL) {
-        return 0;  /* Not a poll, ignore */
+        return 0;  /* Ignore non-poll messages */
     }
     
     /* Verify destination is us */
@@ -245,90 +221,4 @@ int anchor_twr_respond(void)
     return 0;
 }
 
-int anchor_send_beacon(void)
-{
-    anchor_beacon_msg_t *beacon = (anchor_beacon_msg_t *)tx_beacon_msg;
-    
-    beacon->frame_ctrl[0] = 0x41;
-    beacon->frame_ctrl[1] = 0x88;
-    beacon->seq_num = frame_seq_nb++;
-    beacon->pan_id[0] = 0xCA;
-    beacon->pan_id[1] = 0xDE;
-    pack_addr(beacon->dest_addr, UWB_BROADCAST_ID);
-    pack_addr(beacon->src_addr, my_address);
-    beacon->func_code = MSG_TYPE_ANCHOR_BEACON;
-    beacon->x_mm = my_position.x_mm;
-    beacon->y_mm = my_position.y_mm;
-    beacon->z_mm = my_position.z_mm;
-    beacon->is_gateway = is_gateway ? 1 : 0;
-    beacon->hop_to_gateway = hop_to_gateway;
-    
-    dwt_writetxdata(sizeof(anchor_beacon_msg_t), tx_beacon_msg, 0);
-    dwt_writetxfctrl(sizeof(anchor_beacon_msg_t) + FCS_LEN, 0, 0);
-    
-    dwt_starttx(DWT_START_TX_IMMEDIATE);
-    
-    waitforsysstatus(NULL, NULL, DWT_INT_TXFRS_BIT_MASK, 0);
-    dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
-    
-    LOG_DBG("Beacon sent");
-    
-    return 0;
-}
-
-void anchor_handle_position(const uint8_t *rx_buffer, uint16_t length)
-{
-    if (length < sizeof(tag_position_msg_t)) {
-        return;
-    }
-    
-    const tag_position_msg_t *msg = (const tag_position_msg_t *)rx_buffer;
-    
-    uint16_t tag_id = unpack_addr(msg->src_addr);
-    
-    LOG_INF("Position from tag 0x%04X: (%.3f, %.3f, %.3f) m, battery: %u%%",
-            tag_id,
-            msg->x_mm / 1000.0f,
-            msg->y_mm / 1000.0f,
-            msg->z_mm / 1000.0f,
-            msg->battery_pct);
-    
-    /* Forward to gateway */
-    anchor_forward_to_gateway(rx_buffer, length);
-}
-
-int anchor_forward_to_gateway(const uint8_t *data, uint16_t length)
-{
-    if (is_gateway) {
-        /* We are the gateway - send via UART */
-#if CONFIG_UWB_IPS_GATEWAY
-        extern int gateway_send_uart(const uint8_t *data, uint16_t length);
-        return gateway_send_uart(data, length);
-#else
-        return 0;
-#endif
-    } else {
-        /* Forward via UWB mesh */
-        uint16_t next_hop;
-        int ret = mesh_get_next_hop(&next_hop);
-        
-        if (ret != 0) {
-            LOG_WRN("No route to gateway");
-            return -ENETUNREACH;
-        }
-        
-        /* Send to next hop */
-        dwt_writetxdata(length, data, 0);
-        dwt_writetxfctrl(length + FCS_LEN, 0, 0);
-        
-        dwt_starttx(DWT_START_TX_IMMEDIATE);
-        
-        waitforsysstatus(NULL, NULL, DWT_INT_TXFRS_BIT_MASK, 0);
-        dwt_writesysstatuslo(DWT_INT_TXFRS_BIT_MASK);
-        
-        LOG_DBG("Forwarded to anchor 0x%04X", next_hop);
-        
-        return 0;
-    }
-}
-
+/* Note: Beacon sending is now done via BLE (see anchor_main.c and ble_mesh.c) */
