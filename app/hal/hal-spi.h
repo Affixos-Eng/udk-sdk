@@ -21,10 +21,11 @@
 /* Max buffer length of SPI */
 #define MAX_SPI_BUFFER_LENGTH 128
 
-/* Hardware pin */
-#define UWB_CS_PIN          DT_GPIO_PIN(DT_NODELABEL(spi3), cs_gpios)
-#define UWB_CS_PIN_FLAGS    DT_GPIO_FLAGS(DT_NODELABEL(spi3), cs_gpios)
-#define UWB_CS_PIN_CTRL     DT_LABEL(DT_GPIO_CTLR(DT_NODELABEL(spi3), cs_gpios))
+/* Hardware pin — resolved via the uwb0_spi alias so the HAL is board-agnostic
+ * (leaps_lc13 → spi3 on nRF52840; kkmtags → spi1 on nRF52833). */
+#define UWB_CS_PIN          DT_GPIO_PIN(DT_ALIAS(uwb0_spi), cs_gpios)
+#define UWB_CS_PIN_FLAGS    DT_GPIO_FLAGS(DT_ALIAS(uwb0_spi), cs_gpios)
+#define UWB_CS_PIN_CTRL     DT_LABEL(DT_GPIO_CTLR(DT_ALIAS(uwb0_spi), cs_gpios))
 #define UWB_CS_PIN_NUM      DT_GPIO_PIN(DT_ALIAS(uwb0_spi), cs_gpios)
 
 /* Default bit rate */
